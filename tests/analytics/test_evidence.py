@@ -222,3 +222,59 @@ def test_resolver_evidencia_voz_fb_falla_tk_funciona():
             result = resolver_evidencia_voz("Alcaldia", {})
 
     assert result == ["https://tiktok.com/video1"]
+
+
+# ── 10.2: configurable limit for voice evidence ──
+
+def test_voz_limit_default_is_50():
+    """10.2: DEFAULT_VOZ_LIMIT is 50, not 10."""
+    from analytics.evidence import DEFAULT_VOZ_LIMIT
+    assert DEFAULT_VOZ_LIMIT == 50
+
+
+def test_voz_passes_limit_to_queries():
+    """10.2: resolver_evidencia_voz passes DEFAULT_VOZ_LIMIT to query functions."""
+    from analytics.evidence import resolver_evidencia_voz, DEFAULT_VOZ_LIMIT
+
+    with patch("analytics.evidence.get_fb_post_urls_by_pagina",
+               return_value=["https://fb.com/post1"]) as mock_fb:
+        with patch("analytics.evidence.get_tk_post_urls_by_cuenta",
+                   return_value=[]) as mock_tk:
+            resolver_evidencia_voz("Alcaldia", {})
+
+    mock_fb.assert_called_once_with("Alcaldia", limit=DEFAULT_VOZ_LIMIT)
+    mock_tk.assert_called_once_with("Alcaldia", limit=DEFAULT_VOZ_LIMIT)
+
+
+def test_fb_post_urls_accepts_custom_limit():
+    """10.2: get_fb_post_urls_by_pagina accepts custom limit parameter."""
+    from analytics.queries import get_fb_post_urls_by_pagina
+
+    with patch("analytics.queries._conn") as mock_conn:
+        mock_execute = MagicMock(return_value=[])
+        mock_conn.return_value.execute.return_value = mock_execute
+        # Must patch _cfg to avoid real DB access
+        with patch("analytics.queries._cfg") as mock_cfg:
+            mock_cfg.FACEBOOK_DB = ":memory:"
+            try:
+                get_fb_post_urls_by_pagina("TestPage", limit=100)
+            except Exception:
+                pass  # may fail on in-memory DB, that's OK
+        # Verify the SQL was constructed (the function was called)
+        assert mock_conn.called
+
+
+def test_tk_post_urls_accepts_custom_limit():
+    """10.2: get_tk_post_urls_by_cuenta accepts custom limit parameter."""
+    from analytics.queries import get_tk_post_urls_by_cuenta
+
+    with patch("analytics.queries._conn") as mock_conn:
+        mock_execute = MagicMock(return_value=[])
+        mock_conn.return_value.execute.return_value = mock_execute
+        with patch("analytics.queries._cfg") as mock_cfg:
+            mock_cfg.TIKTOK_DB = ":memory:"
+            try:
+                get_tk_post_urls_by_cuenta("TestAccount", limit=100)
+            except Exception:
+                pass  # may fail on in-memory DB, that's OK
+        assert mock_conn.called

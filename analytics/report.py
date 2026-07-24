@@ -228,7 +228,10 @@ def construir_analysis(aprobaciones_agrupadas: list,
             tr = topic_results_by_text.get(i)
             if tr and tr.tema and tr.tema != "no_aplica":
                 evidencia_por_tema.setdefault(tr.tema, set()).add(post_id)
-        # Clasificar emoción de CADA comentario individualmente para evidencia
+    # Clasificar emoción de CADA comentario individualmente para evidencia.
+    # Independiente de topic_results_by_text: clasificar emoción solo
+    # necesita el texto del comentario, no el tema.
+    if comentarios_con_contexto:
         for i, ctx in enumerate(comentarios_con_contexto):
             post_id = ctx.get("post_id", "")
             texto = ctx.get("texto", "")

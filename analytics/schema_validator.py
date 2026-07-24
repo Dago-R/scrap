@@ -540,12 +540,46 @@ def _validar_narrativa_sin_evidencia(data: dict, result: ValidationResult):
     Implementa RG-5 del ANALYST_GUIDE de forma automatica: si la narrativa
     no esta vacia y contiene un numero o porcentaje, pero enlaces_referencia
     esta vacio, marca advertencia.
+
+    Excepciones: secciones de metricas agregadas sin evidencia post-a-post.
+    Estas secciones son indices compuestos o resumenes estrategicos donde
+    cada cifra proviene de un calculo agregado (no de un post individual),
+    por lo que no existe un enlace individual que sustentarla:
+      - bloque1.intensidad: vol_hoy/promedio_semanal son conteos agregados
+      - bloque1.pulso_iq: indice compuesto de multiples dimensiones
+      - bloque1.metricas_rendimiento: engagement rate y ratios agregados
+      - bloque3.autenticidad: porcentajes organico/coordinado agregados
+      - bloque3.velocidad_propagacion: proyecciones y tendencias agregadas
+      - bloque4.* (8 secciones): analisis estrategico/sintetico
     """
     import re
     patron_cifra = re.compile(r'\d+[%]|\d+[\.,]?\d*\s*(comentarios?|posts?|publicaciones?|reacciones?|votos?)')
 
+    # Secciones exemptas de V13: metricas agregadas sin evidencia post-a-post.
+    # Cada cifra proviene de un calculo agregado sobre multiples posts, no de
+    # un post individual, por lo que no existe un enlace individual que la sustente.
+    _V13_EXENTAS: set[str] = {
+        "bloque1.intensidad",
+        "bloque1.pulso_iq",
+        "bloque1.metricas_rendimiento",
+        "bloque3.autenticidad",
+        "bloque3.velocidad_propagacion",
+        # bloque4: las 8 secciones son analisis estrategico/sintetico sin
+        # evidencia post-a-post razonable
+        "bloque4.eco_historico",
+        "bloque4.leccion_aprendida",
+        "bloque4.brecha_percepcion_realidad",
+        "bloque4.contexto_no_visible",
+        "bloque4.correlacion_contenido_reaccion",
+        "bloque4.comparativa_sectorial",
+        "bloque4.proyeccion_escenario",
+        "bloque4.recomendacion_estrategica",
+    }
+
     def _checar(texto, enlaces, seccion):
         if not isinstance(texto, str) or not texto:
+            return
+        if seccion in _V13_EXENTAS:
             return
         if not isinstance(enlaces, list):
             enlaces = []

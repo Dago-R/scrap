@@ -1010,11 +1010,12 @@ def get_fb_posts_by_zone(zona, db_path=None):
         conn.close()
 
 
-def get_fb_post_urls_by_pagina(pagina, limit=10, db_path=None):
-    """Voces — URLs de posts FB de una página específica para evidencia de voz.
+def get_fb_post_urls_by_pagina(pagina, limit=50, db_path=None):
+    """Voces — URLs de posts FB de una pagina especifica para evidencia de voz.
 
-    Retorna lista de post_url de posts de la página indicada.
+    Retorna lista de post_url de posts de la pagina indicada.
     Filtra por page_name (case-insensitive match parcial).
+    El limite por defecto es 50 (ver DEFAULT_VOZ_LIMIT en evidence.py).
     """
     if not pagina:
         return []
@@ -1033,11 +1034,12 @@ def get_fb_post_urls_by_pagina(pagina, limit=10, db_path=None):
         conn.close()
 
 
-def get_tk_post_urls_by_cuenta(cuenta, limit=10, db_path=None):
-    """Voces — URLs de videos TikTok de una cuenta específica para evidencia de voz.
+def get_tk_post_urls_by_cuenta(cuenta, limit=50, db_path=None):
+    """Voces — URLs de videos TikTok de una cuenta especifica para evidencia de voz.
 
     Retorna lista de post_url de videos de la cuenta indicada.
     Filtra por account_id (case-insensitive match parcial).
+    El limite por defecto es 50 (ver DEFAULT_VOZ_LIMIT en evidence.py).
     """
     if not cuenta:
         return []

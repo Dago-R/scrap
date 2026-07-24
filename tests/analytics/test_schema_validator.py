@@ -435,6 +435,113 @@ def test_v13_voz_con_cifras_porcentaje_sin_enlaces():
                for e in r.errores)
 
 
+# ── 10.1: V13 exemption for aggregate sections ──
+
+def test_v13_exenta_intensidad():
+    """10.1: intensidad es metrica agregada, V13 no debe marcar advertencia."""
+    d = _base_valid()
+    d["bloque1"]["intensidad"]["narrativa"] = "Se registraron 200 comentarios."
+    d["bloque1"]["intensidad"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and "intensidad" in e.seccion
+                   for e in r.errores)
+
+
+def test_v13_exenta_pulso_iq():
+    """10.1: pulso_iq es indice compuesto, V13 no debe marcar advertencia."""
+    d = _base_valid()
+    d["bloque1"]["pulso_iq"]["narrativa"] = "El indice alcanzo 75 puntos."
+    d["bloque1"]["pulso_iq"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and "pulso_iq" in e.seccion
+                   for e in r.errores)
+
+
+def test_v13_exenta_metricas_rendimiento():
+    """10.1: metricas_rendimiento es metrica agregada, V13 no debe marcar."""
+    d = _base_valid()
+    d["bloque1"]["metricas_rendimiento"]["narrativa"] = "ER del 3.5%."
+    d["bloque1"]["metricas_rendimiento"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and "metricas_rendimiento" in e.seccion
+                   for e in r.errores)
+
+
+def test_v13_exenta_autenticidad():
+    """10.1: autenticidad es metrica agregada, V13 no debe marcar."""
+    d = _base_valid()
+    d["bloque3"]["autenticidad"]["narrativa"] = "95% organico, 5% coordinado."
+    d["bloque3"]["autenticidad"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and "autenticidad" in e.seccion
+                   for e in r.errores)
+
+
+def test_v13_exenta_velocidad_propagacion():
+    """10.1: velocidad_propagacion es metrica agregada, V13 no debe marcar."""
+    d = _base_valid()
+    d["bloque3"]["velocidad_propagacion"]["narrativa"] = "Proyeccion de 50 comentarios/dia."
+    d["bloque3"]["velocidad_propagacion"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and "velocidad_propagacion" in e.seccion
+                   for e in r.errores)
+
+
+def test_v13_exenta_bloque4_secciones():
+    """10.1: las 8 secciones de bloque4 son analisis estrategico, V13 exempt."""
+    d = _base_valid()
+    for sec in ["eco_historico", "leccion_aprendida", "brecha_percepcion_realidad",
+                "contexto_no_visible", "correlacion_contenido_reaccion",
+                "comparativa_sectorial", "proyeccion_escenario", "recomendacion_estrategica"]:
+        d["bloque4"][sec]["narrativa"] = "El engagement fue del 5% con 200 posts."
+        d["bloque4"][sec]["enlaces_referencia"] = []
+    r = validar(d)
+    for sec in ["eco_historico", "leccion_aprendida", "brecha_percepcion_realidad",
+                "contexto_no_visible", "correlacion_contenido_reaccion",
+                "comparativa_sectorial", "proyeccion_escenario", "recomendacion_estrategica"]:
+        assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                       and sec in e.seccion
+                       for e in r.errores), f"V13 should be exempt for {sec}"
+
+
+def test_v13_no_exenta_clima_narrativo():
+    """10.1: clima_narrativo NO esta exempto, sigue generando advertencia."""
+    d = _base_valid()
+    d["bloque1"]["clima_narrativo"]["narrativa"] = "Hay 150 comentarios negativos."
+    d["bloque1"]["clima_narrativo"]["enlaces_referencia"] = []
+    r = validar(d)
+    assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+               and "clima_narrativo" in e.seccion
+               for e in r.errores)
+
+
+def test_v13_no_exenta_voces():
+    """10.1: voces_influencia NO esta exempto, sigue generando advertencia."""
+    d = _base_valid()
+    d["bloque2"]["voces_influencia"][0]["narrativa"] = "45% engagement."
+    d["bloque2"]["voces_influencia"][0]["enlaces_referencia"] = []
+    r = validar(d)
+    assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+               and "voces_influencia" in e.seccion
+               for e in r.errores)
+
+
+def test_v13_no_exenta_friccion():
+    """10.1: puntos_friccion NO esta exempto, sigue generando advertencia."""
+    d = _base_valid()
+    d["bloque3"]["puntos_friccion"][0]["narrativa"] = "100 comentarios criticos."
+    d["bloque3"]["puntos_friccion"][0]["enlaces_relacionados"] = []
+    r = validar(d)
+    assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+               and "puntos_friccion" in e.seccion
+               for e in r.errores)
+
+
 # ── ValidationResult helpers ──
 def test_validation_result_bloqueantes():
     r = ValidationResult()
