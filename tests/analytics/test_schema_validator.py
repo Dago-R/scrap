@@ -542,6 +542,94 @@ def test_v13_no_exenta_friccion():
                for e in r.errores)
 
 
+# ── 10.6.1: End-to-end V13 test via construir_analysis ──
+
+def test_v13_end_to_end_construir_analysis():
+    """10.6.1: V13 exemptions work correctly in the real pipeline flow.
+
+    Runs construir_analysis() with representative data, then populates
+    narratives with figures (simulating Claude output), and confirms
+    V13 fires for non-exempt sections and does NOT fire for exempt ones.
+    """
+    from analytics.report import construir_analysis
+
+    contexto = [
+        {"id": "c1", "texto": "Estoy furioso con todo", "post_id": "p1", "plataforma": "facebook"},
+        {"id": "c2", "texto": "Qué alegría, me encanta", "post_id": "p2", "plataforma": "facebook"},
+        {"id": "c3", "texto": "Muy triste lo que pasó", "post_id": "p3", "plataforma": "facebook"},
+        {"id": "c4", "texto": "Indignado completamente", "post_id": "p4", "plataforma": "facebook"},
+    ]
+    aprobaciones = [
+        {"id": 1, "categoria": "seguridad", "label": "Seguridad",
+         "pct": 60.0, "doc_count": 120, "apoyo": 30, "critica": 70, "neutral": 20,
+         "pct_apoyo": 25.0, "pct_critica": 58.3, "pct_neutral": 16.7, "saldo": -40,
+         "ejemplo": "", "ejemplo_critica": "", "emociones": {}, "emocion_dominante": "calma"},
+        {"id": 2, "categoria": "movilidad", "label": "Movilidad",
+         "pct": 40.0, "doc_count": 80, "apoyo": 50, "critica": 20, "neutral": 10,
+         "pct_apoyo": 62.5, "pct_critica": 25.0, "pct_neutral": 12.5, "saldo": 30,
+         "ejemplo": "", "ejemplo_critica": "", "emociones": {}, "emocion_dominante": "calma"},
+    ]
+
+    data = construir_analysis(
+        aprobaciones, "2026-04", "2026-04-30",
+        comentarios_texts=[c["texto"] for c in contexto],
+        comentarios_con_contexto=contexto,
+    )
+
+    # Simulate Claude output: populate narratives with figures
+    # Non-exempt sections WITH enlaces_referencia → no V13
+    data["bloque1"]["clima_narrativo"]["narrativa"] = "150 comentarios analizados."
+    data["bloque1"]["clima_narrativo"]["enlaces_referencia"] = ["https://fb.com/post1"]
+    data["bloque1"]["indice_emociones"]["narrativa"] = "La emoción dominante es enojo con 50%."
+    data["bloque1"]["indice_emociones"]["enlaces_referencia"] = ["https://fb.com/post2"]
+    data["bloque1"]["concentracion_tematica"]["narrativa"] = "Seguridad concentra 60%."
+    data["bloque1"]["concentracion_tematica"]["enlaces_referencia"] = ["https://fb.com/post3"]
+
+    # Non-exempt sections WITHOUT enlaces_referencia → V13 fires
+    data["bloque1"]["clima_narrativo"]["narrativa"] = "150 comentarios analizados."
+    data["bloque1"]["clima_narrativo"]["enlaces_referencia"] = []
+
+    # Exempt sections WITH figures but NO enlaces → V13 must NOT fire
+    data["bloque1"]["intensidad"]["narrativa"] = "200 comentarios este mes."
+    data["bloque1"]["intensidad"]["enlaces_referencia"] = []
+    data["bloque1"]["pulso_iq"]["narrativa"] = "Indice de 75 puntos."
+    data["bloque1"]["pulso_iq"]["enlaces_referencia"] = []
+    data["bloque1"]["metricas_rendimiento"]["narrativa"] = "ER del 3.5%."
+    data["bloque1"]["metricas_rendimiento"]["enlaces_referencia"] = []
+    data["bloque3"]["autenticidad"]["narrativa"] = "95% organico."
+    data["bloque3"]["autenticidad"]["enlaces_referencia"] = []
+    data["bloque3"]["velocidad_propagacion"]["narrativa"] = "Proyeccion de 50 comentarios/dia."
+    data["bloque3"]["velocidad_propagacion"]["enlaces_referencia"] = []
+    for sec in ["eco_historico", "leccion_aprendida", "brecha_percepcion_realidad",
+                "contexto_no_visible", "correlacion_contenido_reaccion",
+                "comparativa_sectorial", "proyeccion_escenario", "recomendacion_estrategica"]:
+        data["bloque4"][sec]["narrativa"] = "El engagement fue del 5% con 200 posts."
+        data["bloque4"][sec]["enlaces_referencia"] = []
+
+    r = validar(data)
+
+    # Non-exempt sections WITHOUT enlaces → V13 MUST fire
+    assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+               and e.seccion == "bloque1.clima_narrativo"
+               for e in r.errores), \
+        "V13 must fire for clima_narrativo (non-exempt) with figures and no links"
+
+    # Exempt sections MUST NOT fire V13
+    exempt_sections = [
+        "bloque1.intensidad", "bloque1.pulso_iq", "bloque1.metricas_rendimiento",
+        "bloque3.autenticidad", "bloque3.velocidad_propagacion",
+        "bloque4.eco_historico", "bloque4.leccion_aprendida",
+        "bloque4.brecha_percepcion_realidad", "bloque4.contexto_no_visible",
+        "bloque4.correlacion_contenido_reaccion", "bloque4.comparativa_sectorial",
+        "bloque4.proyeccion_escenario", "bloque4.recomendacion_estrategica",
+    ]
+    for sec in exempt_sections:
+        assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                       and e.seccion == sec
+                       for e in r.errores), \
+            f"V13 must NOT fire for exempt section {sec}"
+
+
 # ── ValidationResult helpers ──
 def test_validation_result_bloqueantes():
     r = ValidationResult()
