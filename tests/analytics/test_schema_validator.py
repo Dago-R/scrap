@@ -548,8 +548,10 @@ def test_v13_end_to_end_construir_analysis():
     """10.6.1: V13 exemptions work correctly in the real pipeline flow.
 
     Runs construir_analysis() with representative data, then populates
-    narratives with figures (simulating Claude output), and confirms
-    V13 fires for non-exempt sections and does NOT fire for exempt ones.
+    narratives with figures (simulating Claude output), and confirms:
+    - Non-exempt sections WITH evidence → V13 does NOT fire (positive case)
+    - Non-exempt sections WITHOUT evidence → V13 fires (negative case)
+    - Exempt sections WITHOUT evidence → V13 does NOT fire
     """
     from analytics.report import construir_analysis
 
@@ -576,8 +578,7 @@ def test_v13_end_to_end_construir_analysis():
         comentarios_con_contexto=contexto,
     )
 
-    # Simulate Claude output: populate narratives with figures
-    # Non-exempt sections WITH enlaces_referencia → no V13
+    # ── Case A: Non-exempt sections WITH enlaces_referencia → V13 does NOT fire ──
     data["bloque1"]["clima_narrativo"]["narrativa"] = "150 comentarios analizados."
     data["bloque1"]["clima_narrativo"]["enlaces_referencia"] = ["https://fb.com/post1"]
     data["bloque1"]["indice_emociones"]["narrativa"] = "La emoción dominante es enojo con 50%."
@@ -585,11 +586,30 @@ def test_v13_end_to_end_construir_analysis():
     data["bloque1"]["concentracion_tematica"]["narrativa"] = "Seguridad concentra 60%."
     data["bloque1"]["concentracion_tematica"]["enlaces_referencia"] = ["https://fb.com/post3"]
 
-    # Non-exempt sections WITHOUT enlaces_referencia → V13 fires
-    data["bloque1"]["clima_narrativo"]["narrativa"] = "150 comentarios analizados."
-    data["bloque1"]["clima_narrativo"]["enlaces_referencia"] = []
+    r_with = validar(data)
 
-    # Exempt sections WITH figures but NO enlaces → V13 must NOT fire
+    for sec in ["bloque1.clima_narrativo", "bloque1.indice_emociones",
+                "bloque1.concentracion_tematica"]:
+        assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                       and e.seccion == sec
+                       for e in r_with.errores), \
+            f"V13 must NOT fire for {sec} when it has evidence links"
+
+    # ── Case B: Same sections WITHOUT enlaces → V13 fires ──
+    data["bloque1"]["clima_narrativo"]["enlaces_referencia"] = []
+    data["bloque1"]["indice_emociones"]["enlaces_referencia"] = []
+    data["bloque1"]["concentracion_tematica"]["enlaces_referencia"] = []
+
+    r_without = validar(data)
+
+    for sec in ["bloque1.clima_narrativo", "bloque1.indice_emociones",
+                "bloque1.concentracion_tematica"]:
+        assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
+                   and e.seccion == sec
+                   for e in r_without.errores), \
+            f"V13 must fire for {sec} (non-exempt) when evidence links are empty"
+
+    # ── Case C: Exempt sections WITH figures but NO enlaces → V13 must NOT fire ──
     data["bloque1"]["intensidad"]["narrativa"] = "200 comentarios este mes."
     data["bloque1"]["intensidad"]["enlaces_referencia"] = []
     data["bloque1"]["pulso_iq"]["narrativa"] = "Indice de 75 puntos."
@@ -606,15 +626,8 @@ def test_v13_end_to_end_construir_analysis():
         data["bloque4"][sec]["narrativa"] = "El engagement fue del 5% con 200 posts."
         data["bloque4"][sec]["enlaces_referencia"] = []
 
-    r = validar(data)
+    r_exempt = validar(data)
 
-    # Non-exempt sections WITHOUT enlaces → V13 MUST fire
-    assert any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
-               and e.seccion == "bloque1.clima_narrativo"
-               for e in r.errores), \
-        "V13 must fire for clima_narrativo (non-exempt) with figures and no links"
-
-    # Exempt sections MUST NOT fire V13
     exempt_sections = [
         "bloque1.intensidad", "bloque1.pulso_iq", "bloque1.metricas_rendimiento",
         "bloque3.autenticidad", "bloque3.velocidad_propagacion",
@@ -626,7 +639,7 @@ def test_v13_end_to_end_construir_analysis():
     for sec in exempt_sections:
         assert not any(e.codigo == "V13_NARRATIVA_SIN_EVIDENCIA"
                        and e.seccion == sec
-                       for e in r.errores), \
+                       for e in r_exempt.errores), \
             f"V13 must NOT fire for exempt section {sec}"
 
 
