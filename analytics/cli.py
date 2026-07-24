@@ -241,35 +241,11 @@ def cmd_generar(args):
         return 1
 
 
-def cmd_narrar(args):
-    """Redacta narrativas de analysis.json usando Claude (Anthropic API).
+def _recorrer_secciones_narrativas(data: dict):
+    """Recorre todas las secciones narrativas del analysis y yield (section_code, system_prompt, contexto).
 
-    Lee el analysis.json YA publicado y el archivo de evidencia del pipeline.
-    Para cada seccion narrativa, construye contexto JSON con cifras calculadas
-    y evidencia resuelta, llama a Claude, y escribe el resultado en narrativa
-    y enlaces_referencia. No modifica ningun campo numerico/calculado.
+    Genera exactamente las mismas secciones que el flujo de API.
     """
-    import logging
-    from analytics.narrator_claude import redactar_narrativa
-    from analytics.evidence import (
-        resolver_evidencia_tema, resolver_evidencia_emocion,
-        resolver_evidencia_friccion, resolver_evidencia_voz,
-        resolver_evidencia_alertas,
-    )
-
-    log = logging.getLogger(__name__)
-
-    # Leer analysis.json existente
-    data_path = args.path or os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
-    )
-    if not os.path.exists(data_path):
-        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
-        return 1
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    # Leer evidencia del pipeline
     evidencia_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "_evidencia_periodo.json"
     )
@@ -278,12 +254,8 @@ def cmd_narrar(args):
         with open(evidencia_path, "r", encoding="utf-8") as f:
             evidencia = json.load(f)
 
-    evidencia_por_tema = evidencia.get("por_tema", {})
-    evidencia_por_emocion = evidencia.get("por_emocion", {})
     periodo = data.get("meta", {}).get("periodo", "")
     fecha_hasta = data.get("meta", {}).get("fecha_datos_hasta", "")
-
-    modified = False
 
     # ── Bloque 1 ──
     b1 = data.get("bloque1", {})
@@ -293,16 +265,8 @@ def cmd_narrar(args):
         if not isinstance(sec, dict):
             continue
         contexto = _construir_contexto_seccion(sec, meta={"periodo": periodo,
-                                                          "fecha_datos_hasta": fecha_hasta})
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE1, contexto,
-                                          section_code=f"b1.{sec_key}")
-            enlaces = _resolver_enlaces_seccion(sec_key, evidencia, data)
-            sec["narrativa"] = narrativa
-            sec["enlaces_referencia"] = enlaces
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar seccion b1.%s: %s", sec_key, e)
+                                                           "fecha_datos_hasta": fecha_hasta})
+        yield (f"b1.{sec_key}", _SYSTEM_PROMPT_BLOQUE1, contexto)
 
     # ── Bloque 2: voces individuales + polarizacion ──
     b2 = data.get("bloque2", {})
@@ -310,29 +274,15 @@ def cmd_narrar(args):
         if not isinstance(voz, dict):
             continue
         contexto = _construir_contexto_seccion(voz, meta={"periodo": periodo,
-                                                          "fecha_datos_hasta": fecha_hasta})
+                                                           "fecha_datos_hasta": fecha_hasta})
         contexto["pagina"] = voz.get("pagina", "")
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE2_VOZ, contexto,
-                                          section_code=f"b2.voz[{i}]")
-            enlaces = resolver_evidencia_voz(voz.get("pagina", ""), evidencia)
-            voz["narrativa"] = narrativa
-            voz["enlaces_referencia"] = enlaces
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar voz[%d] (%s): %s", i, voz.get("pagina", ""), e)
+        yield (f"b2.voz[{i}]", _SYSTEM_PROMPT_BLOQUE2_VOZ, contexto)
 
     pol = b2.get("polarizacion")
     if isinstance(pol, dict):
         contexto = _construir_contexto_seccion(pol, meta={"periodo": periodo,
-                                                          "fecha_datos_hasta": fecha_hasta})
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE2_POL, contexto,
-                                          section_code="b2.polarizacion")
-            pol["narrativa"] = narrativa
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar polarizacion: %s", e)
+                                                           "fecha_datos_hasta": fecha_hasta})
+        yield ("b2.polarizacion", _SYSTEM_PROMPT_BLOQUE2_POL, contexto)
 
     # ── Bloque 3 ──
     b3 = data.get("bloque3", {})
@@ -340,67 +290,270 @@ def cmd_narrar(args):
         if not isinstance(fr, dict):
             continue
         contexto = _construir_contexto_seccion(fr, meta={"periodo": periodo,
-                                                          "fecha_datos_hasta": fecha_hasta})
+                                                           "fecha_datos_hasta": fecha_hasta})
         contexto["tema"] = fr.get("tema", "")
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE3_FRICCION, contexto,
-                                          section_code=f"b3.friccion[{i}]")
-            enlaces = resolver_evidencia_friccion(fr.get("tema", ""), evidencia)
-            fr["narrativa"] = narrativa
-            fr["enlaces_relacionados"] = enlaces
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar friccion[%d] (%s): %s", i, fr.get("tema", ""), e)
+        yield (f"b3.friccion[{i}]", _SYSTEM_PROMPT_BLOQUE3_FRICCION, contexto)
 
     for sec_key in ["autenticidad", "velocidad_propagacion"]:
         sec = b3.get(sec_key)
         if not isinstance(sec, dict):
             continue
         contexto = _construir_contexto_seccion(sec, meta={"periodo": periodo,
-                                                          "fecha_datos_hasta": fecha_hasta})
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE3_SECCIONES, contexto,
-                                          section_code=f"b3.{sec_key}")
-            sec["narrativa"] = narrativa
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar b3.%s: %s", sec_key, e)
+                                                           "fecha_datos_hasta": fecha_hasta})
+        yield (f"b3.{sec_key}", _SYSTEM_PROMPT_BLOQUE3_SECCIONES, contexto)
 
     nivel = b3.get("nivel_alerta")
     if isinstance(nivel, dict):
         contexto = _construir_contexto_seccion(nivel, meta={"periodo": periodo,
-                                                            "fecha_datos_hasta": fecha_hasta})
+                                                             "fecha_datos_hasta": fecha_hasta})
         alertas = nivel.get("alertas_cambridge", [])
         contexto["alertas_cambridge"] = alertas
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE3_NIVEL, contexto,
-                                          section_code="b3.nivel_alerta")
-            enlaces = resolver_evidencia_alertas(alertas, evidencia)
-            nivel["narrativa"] = narrativa
-            nivel["enlaces_referencia"] = enlaces
-            modified = True
-        except Exception as e:
-            log.warning("Fallo narrar nivel_alerta: %s", e)
+        yield ("b3.nivel_alerta", _SYSTEM_PROMPT_BLOQUE3_NIVEL, contexto)
 
     # ── Bloque 4: 8 secciones fijas ──
-    b4 = data.get("bloque4", {})
     bloque4_secciones = [
         "eco_historico", "leccion_aprendida", "brecha_percepcion_realidad",
         "contexto_no_visible", "correlacion_contenido_reaccion",
         "comparativa_sectorial", "proyeccion_escenario", "recomendacion_estrategica",
     ]
+    b4 = data.get("bloque4", {})
     for sec_key in bloque4_secciones:
         sec = b4.get(sec_key)
         if not isinstance(sec, dict):
             continue
         contexto = _construir_contexto_seccion_b4(data, sec_key)
-        try:
-            narrativa = redactar_narrativa(_SYSTEM_PROMPT_BLOQUE4, contexto,
-                                          section_code=f"b4.{sec_key}")
+        yield (f"b4.{sec_key}", _SYSTEM_PROMPT_BLOQUE4, contexto)
+
+
+def _cmd_narrar_exportar(args, data):
+    """Exporta prompts de narrativa a un archivo markdown para pegar en claude.ai."""
+    data_path = args.path or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
+    )
+    if not os.path.exists(data_path):
+        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
+        return 1
+    with open(data_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    out_path = args.output or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "_narrar_prompts.md"
+    )
+
+    lines = []
+    count = 0
+    for section_code, system_prompt, contexto in _recorrer_secciones_narrativas(data):
+        lines.append(f"# {section_code}\n")
+        lines.append("## System Prompt\n")
+        lines.append(f"```\n{system_prompt}\n```\n")
+        lines.append("## Contexto (JSON)\n")
+        lines.append(f"```json\n{json.dumps(contexto, ensure_ascii=False, indent=2)}\n```\n")
+        lines.append("---\n")
+        count += 1
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+    print(f"Prompts exportados: {count} secciones -> {out_path}")
+    print("\nPasos:")
+    print("  1. Copia cada bloque (System Prompt + Contexto) en una sesion de claude.ai")
+    print("  2. Guarda las respuestas en un JSON con formato: {\"section_code\": \"texto\", ...}")
+    print(f"     Secciones: {', '.join(s for s, _, _ in _recorrer_secciones_narrativas(data))}")
+    print("  3. Ejecuta: python -m analytics.cli narrar --importar <archivo_respuestas.json>")
+    return 0
+
+
+def _cmd_narrar_importar(args, data):
+    """Importa respuestas de claude.ai y escribe narrativas en analysis.json."""
+    from analytics.evidence import (
+        resolver_evidencia_voz, resolver_evidencia_friccion, resolver_evidencia_alertas,
+    )
+
+    data_path = args.path or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
+    )
+    if not os.path.exists(data_path):
+        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
+        return 1
+    with open(data_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    evidencia_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "_evidencia_periodo.json"
+    )
+    evidencia = {}
+    if os.path.exists(evidencia_path):
+        with open(evidencia_path, "r", encoding="utf-8") as f:
+            evidencia = json.load(f)
+
+    if not os.path.exists(args.importar):
+        print(f"Archivo de respuestas no encontrado: {args.importar}")
+        return 1
+    with open(args.importar, "r", encoding="utf-8") as f:
+        respuestas = json.load(f)
+
+    if not isinstance(respuestas, dict):
+        print("Error: el archivo de respuestas debe ser un dict {\"section_code\": \"texto\"}")
+        return 1
+
+    periodos = [s for s, _, _ in _recorrer_secciones_narrativas(data)]
+    faltantes = [s for s in periodos if s not in respuestas]
+    aplicadas = 0
+
+    # Resolver enlaces por seccion
+    for section_code, narrativa in respuestas.items():
+        if not isinstance(narrativa, str) or not narrativa.strip():
+            continue
+        # Encontrar la seccion en data
+        if not _escribir_narrativa_en_seccion(data, section_code, narrativa.strip(), evidencia):
+            print(f"  Advertencia: seccion '{section_code}' no encontrada en analysis.json")
+            continue
+        aplicadas += 1
+
+    if faltantes:
+        print(f"Secciones sin narrativa ({len(faltantes)}):")
+        for s in faltantes:
+            print(f"  - {s}")
+
+    if not aplicadas:
+        print("No se aplico ninguna narrativa.")
+        return 1
+
+    if args.dry_run:
+        print(f"\n=== DRY RUN: {aplicadas} narrativas (sin escribir) ===")
+        _imprimir_narrativas(data)
+        return 0
+
+    from analytics.publish import publicar_analysis
+    resultado_pub = publicar_analysis(data, path=data_path, render_narrativas=False)
+    if resultado_pub.es_publicable:
+        print(f"Narrativas actualizadas: {data_path} ({aplicadas} secciones)")
+        if resultado_pub.advertencias():
+            print(f"  ({len(resultado_pub.advertencias())} advertencias)")
+        return 0
+    else:
+        print("Error al publicar narrativas:")
+        for e in resultado_pub.bloqueantes():
+            print(f"  [{e.codigo}] {e.mensaje_humano}")
+        return 1
+
+
+def _escribir_narrativa_en_seccion(data: dict, section_code: str, narrativa: str,
+                                   evidencia: dict) -> bool:
+    """Escribe la narrativa y resuelve enlaces para una seccion dada."""
+    from analytics.evidence import (
+        resolver_evidencia_voz, resolver_evidencia_friccion, resolver_evidencia_alertas,
+    )
+
+    parts = section_code.split(".", 1)
+    if len(parts) != 2:
+        return False
+    bloque_key, sec_id = parts
+
+    if bloque_key == "b1":
+        sec = data.get("bloque1", {}).get(sec_id)
+        if not isinstance(sec, dict):
+            return False
+        sec["narrativa"] = narrativa
+        sec["enlaces_referencia"] = _resolver_enlaces_seccion(sec_id, evidencia, data)
+    elif bloque_key == "b2":
+        import re
+        voz_match = re.match(r"voz\[(\d+)\]", sec_id)
+        if voz_match:
+            idx = int(voz_match.group(1))
+            voces = data.get("bloque2", {}).get("voces_influencia", [])
+            if idx >= len(voces) or not isinstance(voces[idx], dict):
+                return False
+            voz = voces[idx]
+            voz["narrativa"] = narrativa
+            voz["enlaces_referencia"] = resolver_evidencia_voz(
+                voz.get("pagina", ""), evidencia
+            )
+        elif sec_id == "polarizacion":
+            pol = data.get("bloque2", {}).get("polarizacion")
+            if not isinstance(pol, dict):
+                return False
+            pol["narrativa"] = narrativa
+        else:
+            return False
+    elif bloque_key == "b3":
+        import re
+        friccion_match = re.match(r"friccion\[(\d+)\]", sec_id)
+        if friccion_match:
+            idx = int(friccion_match.group(1))
+            fricciones = data.get("bloque3", {}).get("puntos_friccion", [])
+            if idx >= len(fricciones) or not isinstance(fricciones[idx], dict):
+                return False
+            fr = fricciones[idx]
+            fr["narrativa"] = narrativa
+            fr["enlaces_relacionados"] = resolver_evidencia_friccion(
+                fr.get("tema", ""), evidencia
+            )
+        elif sec_id in ("autenticidad", "velocidad_propagacion"):
+            sec = data.get("bloque3", {}).get(sec_id)
+            if not isinstance(sec, dict):
+                return False
             sec["narrativa"] = narrativa
+        elif sec_id == "nivel_alerta":
+            nivel = data.get("bloque3", {}).get("nivel_alerta")
+            if not isinstance(nivel, dict):
+                return False
+            nivel["narrativa"] = narrativa
+            nivel["enlaces_referencia"] = resolver_evidencia_alertas(
+                nivel.get("alertas_cambridge", []), evidencia
+            )
+        else:
+            return False
+    elif bloque_key == "b4":
+        sec = data.get("bloque4", {}).get(sec_id)
+        if not isinstance(sec, dict):
+            return False
+        sec["narrativa"] = narrativa
+    else:
+        return False
+    return True
+
+
+def _cmd_narrar_usar_api(args, data):
+    """Flujo legacy: llama directamente a la API de Anthropic."""
+    import logging
+    from analytics.narrator_claude import redactar_narrativa
+    from analytics.narrator_claude import _get_config
+    from analytics.evidence import (
+        resolver_evidencia_voz, resolver_evidencia_friccion, resolver_evidencia_alertas,
+    )
+
+    log = logging.getLogger(__name__)
+
+    # Chequeo upfront: fallar rapido si no hay API key
+    _get_config()
+
+    data_path = args.path or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
+    )
+    if not os.path.exists(data_path):
+        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
+        return 1
+    with open(data_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    evidencia_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "_evidencia_periodo.json"
+    )
+    evidencia = {}
+    if os.path.exists(evidencia_path):
+        with open(evidencia_path, "r", encoding="utf-8") as f:
+            evidencia = json.load(f)
+
+    modified = False
+
+    for section_code, system_prompt, contexto in _recorrer_secciones_narrativas(data):
+        try:
+            narrativa = redactar_narrativa(system_prompt, contexto, section_code=section_code)
+            _escribir_narrativa_en_seccion(data, section_code, narrativa, evidencia)
             modified = True
         except Exception as e:
-            log.warning("Fallo narrar b4.%s: %s", sec_key, e)
+            log.warning("Fallo narrar %s: %s", section_code, e)
 
     if not modified:
         print("No se genero ninguna narrativa (todas las secciones fallaron).")
@@ -411,7 +564,6 @@ def cmd_narrar(args):
         _imprimir_narrativas(data)
         return 0
 
-    # Publicar con render_narrativas=False (Claude ya entrega texto final)
     from analytics.publish import publicar_analysis
     resultado_pub = publicar_analysis(data, path=data_path, render_narrativas=False)
     if resultado_pub.es_publicable:
@@ -424,6 +576,31 @@ def cmd_narrar(args):
         for e in resultado_pub.bloqueantes():
             print(f"  [{e.codigo}] {e.mensaje_humano}")
         return 1
+
+
+def cmd_narrar(args):
+    """Genera narrativas de analysis.json.
+
+    Modos:
+      --exportar (por defecto): escribe prompts a un archivo para pegar manualmente en claude.ai
+      --importar <archivo>: importa respuestas previamente generadas en claude.ai
+      --usar-api: llama directamente a la API de Anthropic (requiere ANTHROPIC_API_KEY)
+    """
+    data_path = args.path or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
+    )
+    if not os.path.exists(data_path):
+        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
+        return 1
+    with open(data_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if getattr(args, "importar", None):
+        return _cmd_narrar_importar(args, data)
+    elif getattr(args, "usar_api", False):
+        return _cmd_narrar_usar_api(args, data)
+    else:
+        return _cmd_narrar_exportar(args, data)
 
 
 def _construir_contexto_seccion(seccion: dict, meta: dict | None = None) -> dict:
@@ -636,9 +813,17 @@ def main():
     p_res = sub.add_parser("resumen", help="Mostrar estadisticas")
     p_res.add_argument("--db", help="Ruta a DB")
 
-    p_nar = sub.add_parser("narrar", help="Redactar narrativas con Claude")
+    p_nar = sub.add_parser("narrar", help="Generar narrativas de analysis.json")
     p_nar.add_argument("--path", default="data/analysis.json",
                        help="Ruta a analysis.json")
+    p_nar.add_argument("--exportar", action="store_true", default=True,
+                       help="Exportar prompts a archivo para pegar en claude.ai (por defecto)")
+    p_nar.add_argument("--importar", metavar="ARCHIVO",
+                       help="Importar respuestas de claude.ai desde archivo JSON")
+    p_nar.add_argument("--usar-api", action="store_true",
+                       help="Usar API de Anthropic directamente (requiere ANTHROPIC_API_KEY)")
+    p_nar.add_argument("--output", default=None,
+                       help="Ruta de salida para exportar prompts (default: data/_narrar_prompts.md)")
     p_nar.add_argument("--dry-run", action="store_true",
                        help="Imprimir narrativas sin escribir")
 
