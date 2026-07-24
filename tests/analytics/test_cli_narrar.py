@@ -508,6 +508,8 @@ def test_importar_escribe_narrativas(tmp_path):
         "b1.indice_emociones": "Narrativa de indice de emociones.",
         "b2.voz[0]": "Narrativa de voz de influencia.",
         "b3.friccion[0]": "Narrativa de friccion.",
+        "b3.autenticidad": "Narrativa de autenticidad.",
+        "b3.velocidad_propagacion": "Narrativa de velocidad de propagacion.",
         "b4.eco_historico": "Narrativa de echo historico.",
     }
     with open(respuestas_path, "w") as f:
@@ -532,6 +534,8 @@ def test_importar_escribe_narrativas(tmp_path):
     assert written_data["bloque1"]["indice_emociones"]["narrativa"] == "Narrativa de indice de emociones."
     assert written_data["bloque2"]["voces_influencia"][0]["narrativa"] == "Narrativa de voz de influencia."
     assert written_data["bloque3"]["puntos_friccion"][0]["narrativa"] == "Narrativa de friccion."
+    assert written_data["bloque3"]["autenticidad"]["narrativa"] == "Narrativa de autenticidad."
+    assert written_data["bloque3"]["velocidad_propagacion"]["narrativa"] == "Narrativa de velocidad de propagacion."
     assert written_data["bloque4"]["eco_historico"]["narrativa"] == "Narrativa de echo historico."
 
 

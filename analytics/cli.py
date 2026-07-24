@@ -330,11 +330,6 @@ def _cmd_narrar_exportar(args, data):
     data_path = args.path or os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
     )
-    if not os.path.exists(data_path):
-        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
-        return 1
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
 
     out_path = args.output or os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "_narrar_prompts.md"
@@ -372,11 +367,6 @@ def _cmd_narrar_importar(args, data):
     data_path = args.path or os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
     )
-    if not os.path.exists(data_path):
-        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
-        return 1
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
 
     evidencia_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "_evidencia_periodo.json"
@@ -531,11 +521,6 @@ def _cmd_narrar_usar_api(args, data):
     data_path = args.path or os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "analysis.json"
     )
-    if not os.path.exists(data_path):
-        print(f"No se encontro {data_path}. Ejecuta 'generar' primero.")
-        return 1
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
 
     evidencia_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "data", "_evidencia_periodo.json"
