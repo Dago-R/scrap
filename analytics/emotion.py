@@ -144,10 +144,12 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "celebrando", "celebracion", "festejando", "festejo", "fiesta",
         "fiestas", "ganamos", "ganaron", "ganaste", "lo logramos",
         "lo hicieron", "que golazo", "que campeon", "que campeones",
-        "viva", "vivan", "arriba", "ole", "olee", "oleee", "oleeee",
-        "eso es", "asi se hace", "asi se gana", "espana", "la roja",
+        "ole", "olee", "oleee", "oleeee",
+        "asi se hace", "asi se gana", "espana", "la roja",
         "la seleccion", "la furia", "yamal", "pedri", "morata",
         # Excluidos del patch original: "jose", "gabi" (nombres propios ambiguos)
+        # Excluidos 13.1.1: "viva"/"vivan" (verbo vivir), "arriba" (ubicacion),
+        #   "eso es" (conector generico) — falsos positivos en contexto no celebratorio
     },
     # ── CONFIANZA (trust) ──
     "aceptacion": {

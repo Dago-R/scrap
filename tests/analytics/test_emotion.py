@@ -406,3 +406,60 @@ def test_reconocimiento_gracias_alcalde():
 def test_reconocimiento_gracias_pantalla():
     r = classify_emotion("Gracias por la pantalla, excelente idea")
     assert r.emocion == "reconocimiento"
+
+
+# ── 13.1.1: Regresión negativa — entradas ambiguas removidas de euforia ──
+
+def test_eso_es_no_en_lexicon():
+    """'eso es' es conector genérico — NO debe estar en ningun set del lexicon."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "eso es" not in all_words
+
+
+def test_arriba_no_en_lexicon():
+    """'arriba' es ubicación frecuente — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "arriba" not in all_words
+
+
+def test_viva_no_en_lexicon():
+    """'viva' es verbo vivir en subjuntivo — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "viva" not in all_words
+
+
+def test_vivan_no_en_lexicon():
+    """'vivan' es verbo vivir en subjuntivo — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "vivan" not in all_words
+
+
+def test_eso_es_no_euforia_falso_positivo():
+    r = classify_emotion("Eso es un problema que no arreglan")
+    assert r.emocion != "euforia"
+
+
+def test_arriba_no_euforia_falso_positivo():
+    r = classify_emotion("Hay un poste dañado allá arriba")
+    assert r.emocion != "euforia"
+
+
+def test_viva_no_euforia_falso_positivo():
+    r = classify_emotion("Necesitamos que la gente viva mejor")
+    assert r.emocion != "euforia"
+
+
+def test_euforia_positivos_siguen_tras_remocion():
+    """Los casos positivos deben seguir clasificando como euforia."""
+    assert classify_emotion("Gol gol gol!!! Que victoria").emocion == "euforia"
+    assert classify_emotion("Golazo de la seleccion, que campeones").emocion == "euforia"
+    assert classify_emotion("Campeones del mundo, celebrando").emocion == "euforia"
+    assert classify_emotion("Victoria historica, ganamos la copa").emocion == "euforia"
