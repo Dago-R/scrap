@@ -2,13 +2,21 @@
 
 Este modulo traduce los post_ids/video_ids guardados durante la clasificacion
 de comentarios (en _evidencia_periodo.json) a URLs reales usando las queries
-de referencia existentes. Cada funcion retorna lista de URLs sin duplicados
-y sin truncar (RG-5: la lista completa, no una muestra).
+de referencia existentes. Cada funcion retorna lista de URLs sin duplicados.
+
+RG-5: Toda afirmacion con cifra debe tener enlace real. Para voces de
+influencia, se usa un limite de 50 posts por fuente (FB/TK) como
+compromiso entre completitud y tamano del prompt hacia Claude. Las
+demas funciones (tema, emocion, friccion) resuelven la lista completa
+de post_ids de la evidencia sin truncar, ya que el tamano depende del
+numero real de comentarios clasificados.
 
 Uso desde el paso narrar (analytics/cli.py::cmd_narrar):
     from analytics.evidence import resolver_evidencia_tema
     urls = resolver_evidencia_tema("seguridad", evidencia["por_tema"])
 """
+
+DEFAULT_VOZ_LIMIT = 50
 import logging
 
 from analytics.queries import (
@@ -136,20 +144,23 @@ def resolver_evidencia_friccion(tema: str, evidencia: dict) -> list[str]:
 def resolver_evidencia_voz(pagina: str, evidencia: dict) -> list[str]:
     """Resuelve post_ids de una voz de influencia a URLs reales.
 
-    Busca posts de la página en fb_posts (por page_name) y en videos
+    Busca posts de la pagina en fb_posts (por page_name) y en videos
     de TikTok (por account_id). Si genuinamente no hay posts de esa
-    página en el período, retorna [].
+    pagina en el periodo, retorna [].
+
+    Usa DEFAULT_VOZ_LIMIT (50) como limite por fuente para controlar
+    el tamano del prompt hacia Claude sin perder cobertura significativa.
     """
     if not pagina:
         return []
     urls = []
     try:
-        fb_urls = get_fb_post_urls_by_pagina(pagina)
+        fb_urls = get_fb_post_urls_by_pagina(pagina, limit=DEFAULT_VOZ_LIMIT)
         urls.extend(fb_urls)
     except Exception as e:
         logger.debug("FB page lookup failed for '%s': %s", pagina, e)
     try:
-        tk_urls = get_tk_post_urls_by_cuenta(pagina)
+        tk_urls = get_tk_post_urls_by_cuenta(pagina, limit=DEFAULT_VOZ_LIMIT)
         urls.extend(tk_urls)
     except Exception as e:
         logger.debug("TK account lookup failed for '%s': %s", pagina, e)

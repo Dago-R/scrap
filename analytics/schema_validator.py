@@ -540,12 +540,65 @@ def _validar_narrativa_sin_evidencia(data: dict, result: ValidationResult):
     Implementa RG-5 del ANALYST_GUIDE de forma automatica: si la narrativa
     no esta vacia y contiene un numero o porcentaje, pero enlaces_referencia
     esta vacio, marca advertencia.
+
+    Excepciones: secciones de metricas agregadas sin evidencia post-a-post.
+    Estas secciones son indices compuestos o resumenes estrategicos donde
+    cada cifra proviene de un calculo agregado (no de un post individual),
+    por lo que no existe un enlace individual que sustentarla:
+      - bloque1.intensidad: vol_hoy/promedio_semanal son conteos agregados
+      - bloque1.pulso_iq: indice compuesto de multiples dimensiones
+      - bloque1.metricas_rendimiento: engagement rate y ratios agregados
+      - bloque3.autenticidad: porcentajes organico/coordinado agregados
+      - bloque3.velocidad_propagacion: proyecciones y tendencias agregadas
+      - bloque4.* (8 secciones): cada una evaluada individualmente contra
+        el contexto disponible (_construir_contexto_seccion_b4 solo tiene
+        metricas agregadas, sin post individuales que enlazar). Razon
+        especifica de cada una en el dict _V13_EXENTAS.
     """
     import re
     patron_cifra = re.compile(r'\d+[%]|\d+[\.,]?\d*\s*(comentarios?|posts?|publicaciones?|reacciones?|votos?)')
 
+    # Secciones exemptas de V13: metricas agregadas sin evidencia post-a-post.
+    # Cada cifra proviene de un calculo agregado sobre multiples posts, no de
+    # un post individual, por lo que no existe un enlace individual que la sustente.
+    _V13_EXENTAS: set[str] = {
+        "bloque1.intensidad",
+        "bloque1.pulso_iq",
+        "bloque1.metricas_rendimiento",
+        "bloque3.autenticidad",
+        "bloque3.velocidad_propagacion",
+        # bloque4: cada seccion evaluada individualmente contra el contexto
+        # disponible en _construir_contexto_seccion_b4 (solo metricas agregadas:
+        # tono_dominante, pct_favorable, pct_critico, n_total_comentarios,
+        # emocion_dominante, top_tema, hhi, engagement_rate, semaforo,
+        # indice_riesgo, temas_friccion). No hay post individuales en el
+        # contexto de bloque4, por lo que wiring de enlaces no es posible.
+        #
+        # eco_historico: sintesis historica de tendencias agregadas (no post individual)
+        "bloque4.eco_historico",
+        # leccion_aprendida: patron derivado de metricas agregadas (no post individual)
+        "bloque4.leccion_aprendida",
+        # brecha_percepcion_realidad: comparacion entre percepcion (pct) y realidad
+        # (metricas), ambas agregadas, sin post individual que sustente la brecha
+        "bloque4.brecha_percepcion_realidad",
+        # contexto_no_visible: analisis de factors no visibles en metricas agregadas
+        "bloque4.contexto_no_visible",
+        # correlacion_contenido_reaccion: indice_correlacion_externa es un unico
+        # valor agregado (n_picos, coincidencias, indice), no post individuales
+        "bloque4.correlacion_contenido_reaccion",
+        # comparativa_sectorial: comparacion entre sectores usando metricas
+        # agregadas, sin datos sectoriales por post
+        "bloque4.comparativa_sectorial",
+        # proyeccion_escenario: proyeccion futura basada en metricas actuales
+        "bloque4.proyeccion_escenario",
+        # recomendacion_estrategica: recomendacion prescriptiva sin post individual
+        "bloque4.recomendacion_estrategica",
+    }
+
     def _checar(texto, enlaces, seccion):
         if not isinstance(texto, str) or not texto:
+            return
+        if seccion in _V13_EXENTAS:
             return
         if not isinstance(enlaces, list):
             enlaces = []

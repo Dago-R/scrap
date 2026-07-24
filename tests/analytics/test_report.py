@@ -249,3 +249,49 @@ def test_evidencia_por_emocion_multiple_keys_distinct_emotions(tmp_path):
         all_post_ids.update(post_ids)
     # Todos los post_ids de los comentarios deben estar en al menos una emoción
     assert all_post_ids == {"p1", "p2", "p3", "p4"}
+
+
+# ── 10.3: evidencia_por_emocion decoupled from topic_results_by_text ──
+
+def test_evidencia_por_emocion_sin_topic_results():
+    """10.3: evidencia_por_emocion se calcula correctamente cuando
+    topic_results_by_text esta vacio. Clasificar emoción de un
+    comentario solo necesita el texto, no el tema.
+
+    Pass comentarios_texts=None so that topic_results_by_text is never
+    built. If the code is still coupled (emotion loop inside the same
+    'if ctx and topics' block), this test FAILS because the emotion
+    loop would be skipped. If decoupled, the emotion loop runs under
+    'if comentarios_con_contexto:' and this test PASSES."""
+    contexto = [
+        {"id": "c1", "texto": "Estoy furioso, odio esto", "post_id": "p1", "plataforma": "facebook"},
+        {"id": "c2", "texto": "Qué alegría, me encanta", "post_id": "p2", "plataforma": "facebook"},
+        {"id": "c3", "texto": "Muy triste lo que pasó", "post_id": "p3", "plataforma": "facebook"},
+    ]
+
+    # comentarios_texts=None → topic_results_by_text is never built
+    # (the for-loop that calls classify_topic is skipped entirely).
+    # If emotion evidence is still coupled to topic_results_by_text,
+    # evidencia_por_emocion will be empty and this test will fail.
+    data = construir_analysis(
+        _sample_aprobaciones(), "2026-04", "2026-04-30",
+        comentarios_texts=None,
+        comentarios_con_contexto=contexto,
+    )
+
+    # Read the persisted evidence file
+    import os
+    import json
+    evidencia_data_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "data", "_evidencia_periodo.json"
+    )
+    with open(evidencia_data_path, "r") as f:
+        evidencia = json.load(f)
+
+    por_emocion = evidencia.get("por_emocion", {})
+    # emotion evidence must have at least one key even without topic results
+    assert len(por_emocion) >= 1, (
+        f"evidencia_por_emocion should be populated without topic_results_by_text, "
+        f"got {len(por_emocion)} keys: {list(por_emocion.keys())}"
+    )

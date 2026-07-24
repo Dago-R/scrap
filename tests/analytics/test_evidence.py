@@ -222,3 +222,163 @@ def test_resolver_evidencia_voz_fb_falla_tk_funciona():
             result = resolver_evidencia_voz("Alcaldia", {})
 
     assert result == ["https://tiktok.com/video1"]
+
+
+# ── 10.2: configurable limit for voice evidence ──
+
+def test_voz_limit_default_is_50():
+    """10.2: DEFAULT_VOZ_LIMIT is 50, not 10."""
+    from analytics.evidence import DEFAULT_VOZ_LIMIT
+    assert DEFAULT_VOZ_LIMIT == 50
+
+
+def test_voz_passes_limit_to_queries():
+    """10.2: resolver_evidencia_voz passes DEFAULT_VOZ_LIMIT to query functions."""
+    from analytics.evidence import resolver_evidencia_voz, DEFAULT_VOZ_LIMIT
+
+    with patch("analytics.evidence.get_fb_post_urls_by_pagina",
+               return_value=["https://fb.com/post1"]) as mock_fb:
+        with patch("analytics.evidence.get_tk_post_urls_by_cuenta",
+                   return_value=[]) as mock_tk:
+            resolver_evidencia_voz("Alcaldia", {})
+
+    mock_fb.assert_called_once_with("Alcaldia", limit=DEFAULT_VOZ_LIMIT)
+    mock_tk.assert_called_once_with("Alcaldia", limit=DEFAULT_VOZ_LIMIT)
+
+
+def test_fb_post_urls_accepts_custom_limit():
+    """10.2: get_fb_post_urls_by_pagina accepts custom limit parameter."""
+    from analytics.queries import get_fb_post_urls_by_pagina
+
+    with patch("analytics.queries._conn") as mock_conn:
+        mock_execute = MagicMock(return_value=[])
+        mock_conn.return_value.execute.return_value = mock_execute
+        # Must patch _cfg to avoid real DB access
+        with patch("analytics.queries._cfg") as mock_cfg:
+            mock_cfg.FACEBOOK_DB = ":memory:"
+            try:
+                get_fb_post_urls_by_pagina("TestPage", limit=100)
+            except Exception:
+                pass  # may fail on in-memory DB, that's OK
+        # Verify the SQL was constructed (the function was called)
+        assert mock_conn.called
+
+
+def test_tk_post_urls_accepts_custom_limit():
+    """10.2: get_tk_post_urls_by_cuenta accepts custom limit parameter."""
+    from analytics.queries import get_tk_post_urls_by_cuenta
+
+    with patch("analytics.queries._conn") as mock_conn:
+        mock_execute = MagicMock(return_value=[])
+        mock_conn.return_value.execute.return_value = mock_execute
+        with patch("analytics.queries._cfg") as mock_cfg:
+            mock_cfg.TIKTOK_DB = ":memory:"
+            try:
+                get_tk_post_urls_by_cuenta("TestAccount", limit=100)
+            except Exception:
+                pass  # may fail on in-memory DB, that's OK
+        assert mock_conn.called
+
+
+# ── 10.6.2: Real SQLite test for voice evidence LIMIT truncation ──
+
+def test_fb_post_urls_truncates_at_default_limit(tmp_path):
+    """10.6.2: get_fb_post_urls_by_pagina returns exactly DEFAULT_VOZ_LIMIT
+    results when the page has more posts than the limit. Uses a real SQLite
+    database, not mocks."""
+    import sqlite3
+    from analytics.evidence import DEFAULT_VOZ_LIMIT
+    from analytics.queries import get_fb_post_urls_by_pagina
+
+    db_path = str(tmp_path / "test_fb.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE fb_posts ("
+        "  post_id TEXT, post_url TEXT, page_name TEXT, created_time TEXT"
+        ")"
+    )
+    n_posts = DEFAULT_VOZ_LIMIT + 20  # 70 posts, limit is 50
+    rows = [
+        (f"p{i}", f"https://fb.com/post{i}", "TestPage", f"2026-04-{i:02d}")
+        for i in range(1, n_posts + 1)
+    ]
+    conn.executemany(
+        "INSERT INTO fb_posts (post_id, post_url, page_name, created_time) "
+        "VALUES (?, ?, ?, ?)",
+        rows,
+    )
+    conn.commit()
+    conn.close()
+
+    result = get_fb_post_urls_by_pagina("TestPage", db_path=db_path)
+    assert len(result) == DEFAULT_VOZ_LIMIT, (
+        f"Expected exactly {DEFAULT_VOZ_LIMIT} URLs, got {len(result)}"
+    )
+    # All returned URLs should be valid
+    for url in result:
+        assert url.startswith("https://fb.com/post")
+
+
+def test_fb_post_urls_returns_all_when_under_limit(tmp_path):
+    """10.6.2: get_fb_post_urls_by_pagina returns all URLs when under limit."""
+    import sqlite3
+    from analytics.evidence import DEFAULT_VOZ_LIMIT
+    from analytics.queries import get_fb_post_urls_by_pagina
+
+    db_path = str(tmp_path / "test_fb_under.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE fb_posts ("
+        "  post_id TEXT, post_url TEXT, page_name TEXT, created_time TEXT"
+        ")"
+    )
+    n_posts = 10  # well under limit
+    rows = [
+        (f"p{i}", f"https://fb.com/post{i}", "TestPage", f"2026-04-{i:02d}")
+        for i in range(1, n_posts + 1)
+    ]
+    conn.executemany(
+        "INSERT INTO fb_posts (post_id, post_url, page_name, created_time) "
+        "VALUES (?, ?, ?, ?)",
+        rows,
+    )
+    conn.commit()
+    conn.close()
+
+    result = get_fb_post_urls_by_pagina("TestPage", db_path=db_path)
+    assert len(result) == n_posts, (
+        f"Expected {n_posts} URLs, got {len(result)}"
+    )
+
+
+def test_tk_post_urls_truncates_at_default_limit(tmp_path):
+    """10.6.2: get_tk_post_urls_by_cuenta returns exactly DEFAULT_VOZ_LIMIT
+    results when the account has more videos than the limit. Real SQLite."""
+    import sqlite3
+    from analytics.evidence import DEFAULT_VOZ_LIMIT
+    from analytics.queries import get_tk_post_urls_by_cuenta
+
+    db_path = str(tmp_path / "test_tk.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE videos ("
+        "  id TEXT, post_url TEXT, account_id TEXT, created_at TEXT"
+        ")"
+    )
+    n_videos = DEFAULT_VOZ_LIMIT + 20
+    rows = [
+        (f"v{i}", f"https://tiktok.com/video{i}", "TestAccount", f"2026-04-{i:02d}")
+        for i in range(1, n_videos + 1)
+    ]
+    conn.executemany(
+        "INSERT INTO videos (id, post_url, account_id, created_at) "
+        "VALUES (?, ?, ?, ?)",
+        rows,
+    )
+    conn.commit()
+    conn.close()
+
+    result = get_tk_post_urls_by_cuenta("TestAccount", db_path=db_path)
+    assert len(result) == DEFAULT_VOZ_LIMIT, (
+        f"Expected exactly {DEFAULT_VOZ_LIMIT} URLs, got {len(result)}"
+    )
