@@ -319,3 +319,147 @@ def test_deduplicacion_propuesta_emocion():
     anger_entries = [e for e in data if e["clave_propuesta"] == "anger_nueva"]
     assert len(anger_entries) == 1
     assert anger_entries[0]["n_ocurrencias"] == 2
+
+
+# ── Patch 13.1: Regresión negativa — exclusiones del patch ──
+
+def test_jose_no_en_lexicon():
+    """'jose' es nombre propio ambiguo — NO debe estar en ningun set del lexicon."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "jose" not in all_words
+
+
+def test_gabi_no_en_lexicon():
+    """'gabi' es nombre propio ambiguo — NO debe estar en ningun set del lexicon."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "gabi" not in all_words
+
+
+def test_vamos_no_en_lexicon():
+    """'vamos' es uso neutro frecuente en ES salvadoreño — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    # Puede existir como parte de frase ("a ver si vamos"), pero no como token suelto
+    assert "vamos" not in all_words
+
+
+def test_santa_ana_solo_no_dispara_amor_civico():
+    """Comentario que solo menciona el lugar NO debe clasificarse como amor_civico."""
+    r = classify_emotion("en Santa Ana nunca arreglan nada")
+    # 'santa ana' suelto no esta en amor_civico, asi que no debe ganar esa categoria
+    # Puede caer en otra clave o propuesta, pero NO amor_civico
+    assert r.emocion != "amor_civico"
+
+
+# ── Patch 13.1: Tests positivos ──
+
+def test_euforia_deportiva_gol():
+    r = classify_emotion("Gol gol gol!!! Que victoria")
+    assert r.emocion == "euforia"
+
+
+def test_euforia_deportiva_golazo():
+    r = classify_emotion("Golazo de la seleccion, que campeones")
+    assert r.emocion == "euforia"
+
+
+def test_euforia_deportiva_campeones():
+    r = classify_emotion("Campeones del mundo, celebrando")
+    assert r.emocion == "euforia"
+
+
+def test_euforia_deportiva_victoria():
+    r = classify_emotion("Victoria historica, ganamos la copa")
+    assert r.emocion == "euforia"
+
+
+def test_alegria_expresiones():
+    r = classify_emotion("Que lindo, gran partido de la noche")
+    assert r.emocion == "alegria"
+
+
+def test_alegria_que_bien():
+    r = classify_emotion("Que bien jugado, hermoso")
+    assert r.emocion == "alegria"
+
+
+def test_amor_civico_orgullo():
+    r = classify_emotion("Orgullo santaneco, mi municipio es el mejor")
+    assert r.emocion == "amor_civico"
+
+
+def test_amor_civico_santaneco():
+    r = classify_emotion("Santaneco de corazón, amo Santa Ana")
+    assert r.emocion == "amor_civico"
+
+
+def test_reconocimiento_gracias_alcalde():
+    r = classify_emotion("Gracias alcalde por la iniciativa")
+    assert r.emocion == "reconocimiento"
+
+
+def test_reconocimiento_gracias_pantalla():
+    r = classify_emotion("Gracias por la pantalla, excelente idea")
+    assert r.emocion == "reconocimiento"
+
+
+# ── 13.1.1: Regresión negativa — entradas ambiguas removidas de euforia ──
+
+def test_eso_es_no_en_lexicon():
+    """'eso es' es conector genérico — NO debe estar en ningun set del lexicon."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "eso es" not in all_words
+
+
+def test_arriba_no_en_lexicon():
+    """'arriba' es ubicación frecuente — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "arriba" not in all_words
+
+
+def test_viva_no_en_lexicon():
+    """'viva' es verbo vivir en subjuntivo — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "viva" not in all_words
+
+
+def test_vivan_no_en_lexicon():
+    """'vivan' es verbo vivir en subjuntivo — NO debe estar como token suelto."""
+    all_words = set()
+    for words in EMOTION_LEXICON.values():
+        all_words.update(words)
+    assert "vivan" not in all_words
+
+
+def test_eso_es_no_euforia_falso_positivo():
+    r = classify_emotion("Eso es un problema que no arreglan")
+    assert r.emocion != "euforia"
+
+
+def test_arriba_no_euforia_falso_positivo():
+    r = classify_emotion("Hay un poste dañado allá arriba")
+    assert r.emocion != "euforia"
+
+
+def test_viva_no_euforia_falso_positivo():
+    r = classify_emotion("Necesitamos que la gente viva mejor")
+    assert r.emocion != "euforia"
+
+
+def test_euforia_positivos_siguen_tras_remocion():
+    """Los casos positivos deben seguir clasificando como euforia."""
+    assert classify_emotion("Gol gol gol!!! Que victoria").emocion == "euforia"
+    assert classify_emotion("Golazo de la seleccion, que campeones").emocion == "euforia"
+    assert classify_emotion("Campeones del mundo, celebrando").emocion == "euforia"
+    assert classify_emotion("Victoria historica, ganamos la copa").emocion == "euforia"

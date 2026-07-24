@@ -121,12 +121,35 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "encantado", "encantada", "disfruto", "gustoso", "gustosa",
         "satisfecho", "satisfecha", "bienestar", "regocijo",
         "sonrisa", "divertido", "divertida",
+        # Patch 13.1 — expresiones de celebracion
+        "que alegria", "que bonito", "que lindo", "que bien", "muy bien",
+        "que bueno", "que rico", "me alegra", "me alegro", "que emocion",
+        "emocion", "emocionante", "lindo", "lindos", "linda", "lindas",
+        "hermoso", "hermosa", "bonito", "bonita", "precioso", "preciosa",
+        "disfrutando", "disfrutamos", "gozando", "gozamos", "animo",
+        "fuerza", "adelante", "que noche", "que partido", "que tarde",
+        "lograron", "lo lograron", "gran partido", "gran noche",
+        "bien jugado", "bien hecho",
+        # Excluido del patch original: "vamos" (uso neutro muy frecuente en ES salvadoreño)
     },
     "euforia": {
         "euforico", "euforia", "increible", "emocionado", "emocionada",
         "espectacular", "brutal", "brutalisimo", "desbordado", "desbordada",
         "extremo", "extrema", "gloria", "triple", "wow", "wao",
         "genialisimo", "fantastico",
+        # Patch 13.1 — contenido deportivo/festivo
+        "gol", "goles", "golazo", "goool", "gooool", "goooool", "gooooool",
+        "victoria", "victorias", "campeon", "campeones", "campeona",
+        "campeonas", "campeonato", "titulo", "titulos", "trofeo", "copa",
+        "celebrando", "celebracion", "festejando", "festejo", "fiesta",
+        "fiestas", "ganamos", "ganaron", "ganaste", "lo logramos",
+        "lo hicieron", "que golazo", "que campeon", "que campeones",
+        "ole", "olee", "oleee", "oleeee",
+        "asi se hace", "asi se gana", "espana", "la roja",
+        "la seleccion", "la furia", "yamal", "pedri", "morata",
+        # Excluidos del patch original: "jose", "gabi" (nombres propios ambiguos)
+        # Excluidos 13.1.1: "viva"/"vivan" (verbo vivir), "arriba" (ubicacion),
+        #   "eso es" (conector generico) — falsos positivos en contexto no celebratorio
     },
     # ── CONFIANZA (trust) ──
     "aceptacion": {
@@ -245,6 +268,14 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "amor", "cariño", "cariño", "aprecio", "comunidad",
         "hermanos", "hermandad", "patria", "tierra", "queremos",
         "unidos", "solidaridad", "fraternidad",
+        # Patch 13.1 — amor local/territorial
+        "orgullo", "orgulloso", "orgullosa", "orgullosos", "orgullosas",
+        "mi municipio", "nuestro municipio", "mi ciudad", "nuestra ciudad",
+        "mi pueblo", "nuestro pueblo", "santaneco", "santaneca",
+        "santanecos", "santanecas", "nuestra alcaldia", "nuestro alcalde",
+        "juntos", "todos juntos", "union", "unidad", "nuestra comunidad",
+        "mi comunidad", "amo santa ana", "quiero santa ana", "mi santa ana",
+        # Excluidos: "santa ana" / "nuestra santa ana" sin verbo (falsos positivos)
     },
     "sumision": {
         "resignado", "resignada", "toca aceptar", "no hay opcion",
@@ -298,6 +329,20 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "agradezco", "gracias", "felicito", "bravo", "buen trabajo",
         "reconocimiento", "aprecio", "bendiciones", "excelente",
         "gracias por", "mi agradecimiento",
+        # Patch 13.1 — agradecimiento especifico
+        "gracias por la pantalla", "gracias por traer",
+        "gracias por el evento", "gracias por la actividad",
+        "gracias por la iniciativa", "gracias al alcalde",
+        "gracias alcalde", "gracias edil", "gracias municipalidad",
+        "gracias municipio", "gracias alcaldia", "gracias a la alcaldia",
+        "gracias a la municipalidad", "gracias por pensar",
+        "gracias por organizar", "gracias por hacer",
+        "muy buena idea", "buena idea", "gran iniciativa",
+        "linda iniciativa", "buena iniciativa", "que iniciativa",
+        "excelente iniciativa", "excelente idea", "que buena idea",
+        "que detalle", "buen detalle", "bonito detalle", "lindo detalle",
+        "felicitaciones al alcalde", "felicitaciones al edil",
+        "felicitaciones a la alcaldia",
     },
     "ironia": {
         "claro que si", "que bueno", "bravo pero", "seguro que",
