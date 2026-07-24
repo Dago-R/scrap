@@ -88,6 +88,47 @@ Este es el **único camino de escritura** a `data/analysis.json`. El pipeline:
 
 No existe ni se soporta ningún generador paralelo o manual para este archivo.
 
+## Narrar (generar textos narrativos)
+
+El paso `narrar` genera los textos narrativos (narrativas) de cada sección del
+analysis.json. **No requiere API key de Anthropic ni ninguna variable de entorno
+especial.** El flujo por defecto exporta prompts para pegar manualmente en
+claude.ai.
+
+### Paso 1: Exportar prompts
+
+```
+python -m analytics.cli narrar --exportar
+```
+
+Genera `data/_narrar_prompts.md` con el system prompt y contexto JSON de cada
+sección, listos para copiar/pegar en una sesión de claude.ai.
+
+### Paso 2: Pegar en claude.ai y guardar respuesta
+
+1. Copia cada bloque (System Prompt + Contexto) en una sesión de claude.ai
+2. Guarda las respuestas en un archivo JSON con el formato:
+   `{"section_code": "texto narrativo", ...}`
+   Ejemplo: `{"b1.clima_narrativo": "El clima mostró...", "b2.voz[0]": "La cuenta..."}`
+3. Ejecuta el paso de importación
+
+### Paso 3: Importar respuestas
+
+```
+python -m analytics.cli narrar --importar respuestas.json
+```
+
+Importa las respuestas y escribe las narrativas en `analysis.json`. El archivo
+de respuestas no necesita cubrir todas las secciones — las que falten se reportan
+como advertencia sin fallar la importación.
+
+### Opciones adicionales
+
+- `--dry-run`: revisar antes de publicar
+- `--path`: ruta alternativa a `data/analysis.json`
+- `--usar-api`: llama directamente a la API de Anthropic (requiere `ANTHROPIC_API_KEY`).
+  **Solo para quien tenga API key configurada.** No es el flujo estándar.
+
 ## Ejecutar el panel de carga (analista, solo local)
 
 ​

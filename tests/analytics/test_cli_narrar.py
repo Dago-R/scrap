@@ -167,6 +167,8 @@ def test_narrar_no_modifica_campos_calculados(monkeypatch, tmp_path):
         args = MagicMock()
         args.path = str(data_path)
         args.dry_run = False
+        args.usar_api = True
+        args.importar = None
 
         from analytics.cli import cmd_narrar
         with patch("analytics.publish.publicar_analysis") as mock_pub:
@@ -197,6 +199,8 @@ def test_narrar_dry_run_no_escribe(monkeypatch, tmp_path):
         args = MagicMock()
         args.path = str(data_path)
         args.dry_run = True
+        args.usar_api = True
+        args.importar = None
 
         from analytics.cli import cmd_narrar
         result = cmd_narrar(args)
@@ -228,6 +232,8 @@ def test_narrar_fallo_parcial_no_tumba_ejecucion(monkeypatch, tmp_path):
         args = MagicMock()
         args.path = str(data_path)
         args.dry_run = False
+        args.usar_api = True
+        args.importar = None
 
         from analytics.cli import cmd_narrar
         with patch("analytics.publish.publicar_analysis") as mock_pub:
@@ -417,3 +423,230 @@ def test_cmd_generar_tolerancia_fallo_plataforma(monkeypatch):
     assert "comentario fb" in passed_texts
     assert "comentario ext" in passed_texts
     assert len(passed_ctx) == 2
+
+
+# ── 11.5: Tests para exportar/importar ──
+
+def test_exportar_no_requiere_api_key(tmp_path):
+    """El flujo por defecto (exportar) nunca require ANTHROPIC_API_KEY."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.output = str(tmp_path / "_narrar_prompts.md")
+    args.usar_api = False
+    args.importar = None
+    args.dry_run = False
+
+    import os
+    os.environ.pop("ANTHROPIC_API_KEY", None)
+
+    from analytics.cli import cmd_narrar
+    result = cmd_narrar(args)
+
+    assert result == 0
+    assert "ANTHROPIC_API_KEY" not in os.environ
+
+
+def test_exportar_genera_archivo_con_todas_las_secciones(tmp_path):
+    """El archivo exportado contiene todas las secciones con system_prompt y contexto."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    out_path = tmp_path / "_narrar_prompts.md"
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.output = str(out_path)
+    args.usar_api = False
+    args.importar = None
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    result = cmd_narrar(args)
+
+    assert result == 0
+    assert out_path.exists()
+
+    content = out_path.read_text(encoding="utf-8")
+
+    # Verificar que todas las secciones estan presentes
+    expected_codes = [
+        "b1.clima_narrativo", "b1.indice_emociones", "b1.intensidad",
+        "b1.concentracion_tematica", "b1.pulso_iq", "b1.metricas_rendimiento",
+        "b2.voz[0]", "b2.polarizacion",
+        "b3.friccion[0]", "b3.autenticidad", "b3.velocidad_propagacion", "b3.nivel_alerta",
+        "b4.eco_historico", "b4.leccion_aprendida", "b4.brecha_percepcion_realidad",
+        "b4.contexto_no_visible", "b4.correlacion_contenido_reaccion",
+        "b4.comparativa_sectorial", "b4.proyeccion_escenario", "b4.recomendacion_estrategica",
+    ]
+    for code in expected_codes:
+        assert f"# {code}" in content, f"Seccion {code} no encontrada en archivo exportado"
+
+    # Verificar que tiene system_prompt y contexto JSON
+    assert "## System Prompt" in content
+    assert "## Contexto (JSON)" in content
+    assert "```json" in content
+
+
+def test_importar_escribe_narrativas(tmp_path):
+    """Importar respuestas escribe narrativas correctamente en analysis.json."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    respuestas_path = tmp_path / "respuestas.json"
+
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    # Crear respuestas de prueba
+    respuestas = {
+        "b1.clima_narrativo": "Narrativa de clima narrativo de prueba.",
+        "b1.indice_emociones": "Narrativa de indice de emociones.",
+        "b2.voz[0]": "Narrativa de voz de influencia.",
+        "b3.friccion[0]": "Narrativa de friccion.",
+        "b4.eco_historico": "Narrativa de echo historico.",
+    }
+    with open(respuestas_path, "w") as f:
+        json.dump(respuestas, f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.importar = str(respuestas_path)
+    args.usar_api = False
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    with patch("analytics.publish.publicar_analysis") as mock_pub:
+        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+        result = cmd_narrar(args)
+        written_data = mock_pub.call_args[0][0]
+
+    assert result == 0
+
+    # Verificar que las narrativas se escribieron (en el dict pasado a publicar_analysis)
+    assert written_data["bloque1"]["clima_narrativo"]["narrativa"] == "Narrativa de clima narrativo de prueba."
+    assert written_data["bloque1"]["indice_emociones"]["narrativa"] == "Narrativa de indice de emociones."
+    assert written_data["bloque2"]["voces_influencia"][0]["narrativa"] == "Narrativa de voz de influencia."
+    assert written_data["bloque3"]["puntos_friccion"][0]["narrativa"] == "Narrativa de friccion."
+    assert written_data["bloque4"]["eco_historico"]["narrativa"] == "Narrativa de echo historico."
+
+
+def test_importar_seccion_faltante_se_reporta(tmp_path):
+    """Si faltan secciones en el archivo de respuestas, se reporta como advertencia."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    respuestas_path = tmp_path / "respuestas.json"
+
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    # Solo importar una seccion
+    respuestas = {
+        "b1.clima_narrativo": "Solo esta seccion.",
+    }
+    with open(respuestas_path, "w") as f:
+        json.dump(respuestas, f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.importar = str(respuestas_path)
+    args.usar_api = False
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    with patch("analytics.publish.publicar_analysis") as mock_pub:
+        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+        result = cmd_narrar(args)
+        written_data = mock_pub.call_args[0][0]
+
+    assert result == 0
+    # Verificar que la seccion unica se aplico
+    assert written_data["bloque1"]["clima_narrativo"]["narrativa"] == "Solo esta seccion."
+
+
+def test_importar_archivo_no_existe(tmp_path):
+    """Si el archivo de respuestas no existe, retorna error."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.importar = str(tmp_path / "no_existe.json")
+    args.usar_api = False
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    result = cmd_narrar(args)
+
+    assert result == 1
+
+
+def test_importar_formato_invalido(tmp_path):
+    """Si el archivo de respuestas no es un dict, retorna error."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    respuestas_path = tmp_path / "respuestas.json"
+
+    with open(respuestas_path, "w") as f:
+        json.dump(["no es un dict"], f)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.importar = str(respuestas_path)
+    args.usar_api = False
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    result = cmd_narrar(args)
+
+    assert result == 1
+
+
+def test_usar_api_requiere_api_key(monkeypatch, tmp_path):
+    """El flag --usar-api requiere ANTHROPIC_API_KEY."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    # Asegurar que no hay API key
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    args = MagicMock()
+    args.path = str(data_path)
+    args.usar_api = True
+    args.importar = None
+    args.dry_run = False
+
+    from analytics.cli import cmd_narrar
+    # Deberia fallar porque no hay API key
+    with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
+        cmd_narrar(args)
+
+
+def test_recorrer_secciones_narrativas_coincide_con_cmd_narrar(tmp_path):
+    """_recorrer_secciones_narrativas genera las mismas secciones que el flujo API."""
+    data = _analysis_base()
+    data_path = tmp_path / "analysis.json"
+    with open(data_path, "w") as f:
+        json.dump(data, f)
+
+    from analytics.cli import _recorrer_secciones_narrativas
+    sections = list(_recorrer_secciones_narrativas(data))
+
+    # Contar secciones esperadas
+    expected_count = 6 + 2 + 4 + 8  # b1 + b2 + b3 + b4
+    assert len(sections) == expected_count
+
+    # Verificar que cada tupla tiene (section_code, system_prompt, contexto)
+    for section_code, system_prompt, contexto in sections:
+        assert isinstance(section_code, str)
+        assert isinstance(system_prompt, str)
+        assert isinstance(contexto, dict)
+        assert "periodo" in contexto
