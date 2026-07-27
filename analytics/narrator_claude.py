@@ -1,6 +1,6 @@
 """Cliente para la API de Anthropic (Claude) — redaccion de narrativas.
 
-Este modulo es independiente de dashboard/llm_groq.py. Usa exclusivamente
+Este modulo es independiente de dashboard/llm_nvidia.py. Usa exclusivamente
 Claude (Anthropic) y NO tiene cascada de respaldo silencioso: si Claude
 falla, se propaga el error porque el usuario exige un proveedor especifico
 y auditable.
@@ -59,7 +59,7 @@ def _get_config():
 def _retry_with_backoff(func, *args, max_retries=None, **kwargs):
     """Reintenta con backoff solo ante rate-limit/timeout.
 
-    Mismo patron que dashboard/llm_groq.py::_retry_with_backoff pero sin
+    Mismo patron que dashboard/llm_nvidia.py::_retry_with_backoff pero sin
     cascada de modelos: si Claude falla, se propaga el error.
     """
     if max_retries is None:

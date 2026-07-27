@@ -15,7 +15,7 @@ import unicodedata
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from dashboard.llm_groq import (
+from dashboard.llm_nvidia import (
     chat_vision,
     groq_disponible,
 )

@@ -1,20 +1,12 @@
 """
-Cliente LLM (API compatible con OpenAI) para visión y texto.
+Cliente LLM (API compatible con OpenAI) para visión — NVIDIA NIM.
 
-Migrado a NVIDIA NIM (build.nvidia.com) para usar modelos de razonamiento
-potentes con presupuesto 0 (tier gratis ~40 req/min). Sigue siendo compatible
-con OpenAI, así que cambiar de proveedor/modelo solo requiere variables de
-entorno; NO hace falta tocar el código.
+Resolución de configuración (de mayor a menor prioridad):
 
-Resolución de configuración (de mayor a menor prioridad). Se conservan los
-nombres antiguos GROQ_* como respaldo para no romper despliegues en transición:
-
-  API key:    LLM_API_KEY   -> NVIDIA_API_KEY -> GROQ_API_KEY
-  Base URL:   LLM_BASE_URL  -> GROQ_BASE_URL  -> https://integrate.api.nvidia.com/v1
-  Texto:      LLM_TEXT_MODEL     -> GROQ_TEXT_MODEL   -> deepseek-ai/deepseek-v4-flash
-  Verificador (cascada): LLM_VERIFIER_MODEL          -> z-ai/glm-5.1
-  Visión:     LLM_VISION_MODEL   -> GROQ_VISION_MODEL -> qwen/qwen3.5-397b-a17b
-  Visión (respaldo): LLM_VISION_FALLBACK            -> (sin respaldo por defecto; solo modelos multi-imagen)
+  API key:    LLM_API_KEY   -> NVIDIA_API_KEY -> GROQ_API_KEY (legacy)
+  Base URL:   LLM_BASE_URL  -> GROQ_BASE_URL (legacy) -> https://integrate.api.nvidia.com/v1
+  Visión:     LLM_VISION_MODEL -> GROQ_VISION_MODEL (legacy) -> qwen/qwen3.5-397b-a17b
+  Imagen:     LLM_MAX_LADO / LLM_JPEG_QUALITY (GROQ_* aceptados como fallback legacy)
 
   Proveedor de TEXTO separado (opcional). Permite enviar el TEXTO a otro
   proveedor (p. ej. OpenCode Zen) y mantener la VISIÓN (Phi) en NVIDIA:
@@ -116,8 +108,8 @@ VISION_FALLBACKS = _lista_env(
     "LLM_VISION_FALLBACK",
     [],
 )
-GROQ_MAX_LADO = int(os.environ.get("GROQ_MAX_LADO", "1280"))
-GROQ_JPEG_QUALITY = int(os.environ.get("GROQ_JPEG_QUALITY", "82"))
+LLM_MAX_LADO = int(os.environ.get("LLM_MAX_LADO") or os.environ.get("GROQ_MAX_LADO") or "1280")
+LLM_JPEG_QUALITY = int(os.environ.get("LLM_JPEG_QUALITY") or os.environ.get("GROQ_JPEG_QUALITY") or "82")
 
 # Algunos modelos de NIM no aceptan response_format=json_object. Si es el caso,
 # pon LLM_JSON_MODE=0: se omite el response_format pero el prompt sigue pidiendo
@@ -150,8 +142,8 @@ _cliente_texto_api_key: str | None = None
 _cliente_texto_base_url: str | None = None
 
 
-def _get_groq_client() -> OpenAI | None:
-    """Cliente principal (visión y, por defecto, texto). Usa el endpoint NVIDIA."""
+def _get_nvidia_client() -> OpenAI | None:
+    """Cliente principal de visión. Usa el endpoint NVIDIA NIM."""
     global _cliente, _cliente_api_key, _cliente_base_url
 
     api_key = _primer_env("LLM_API_KEY", "NVIDIA_API_KEY", "GROQ_API_KEY")
@@ -205,7 +197,7 @@ def _get_text_client() -> OpenAI | None:
 
     # Sin configuración específica de texto: comparte el cliente principal.
     if not text_key and not text_base:
-        return _get_groq_client()
+        return _get_nvidia_client()
 
     api_key = text_key or _primer_env("LLM_API_KEY", "NVIDIA_API_KEY", "GROQ_API_KEY")
     if not api_key:
@@ -220,7 +212,7 @@ def _get_text_client() -> OpenAI | None:
         except Exception:
             api_key = None
     if not api_key:
-        return _get_groq_client()
+        return _get_nvidia_client()
 
     base_url = text_base or "https://opencode.ai/zen/v1"
 
@@ -239,12 +231,8 @@ def _get_text_client() -> OpenAI | None:
     return _cliente_texto
 
 
-def groq_disponible() -> bool:
-    return _get_text_client() is not None or _get_groq_client() is not None
-
-
-# Alias con nombre neutral de proveedor (el backend ya no es necesariamente Groq).
-llm_disponible = groq_disponible
+def llm_disponible() -> bool:
+    return _get_text_client() is not None or _get_nvidia_client() is not None
 
 
 # ── Reintento con backoff ──
@@ -333,13 +321,13 @@ def _paginas_a_contenido(prompt: str, paginas: list) -> list:
             img = PILImage.open(io.BytesIO(raw))
             w, h = img.size
             max_side = max(w, h)
-            if max_side > GROQ_MAX_LADO:
-                ratio = GROQ_MAX_LADO / max_side
+            if max_side > LLM_MAX_LADO:
+                ratio = LLM_MAX_LADO / max_side
                 new_w = int(w * ratio)
                 new_h = int(h * ratio)
                 img = img.resize((new_w, new_h), PILImage.LANCZOS)
                 buf = io.BytesIO()
-                img.save(buf, format="JPEG", quality=GROQ_JPEG_QUALITY)
+                img.save(buf, format="JPEG", quality=LLM_JPEG_QUALITY)
                 raw = buf.getvalue()
                 mime = "image/jpeg"
         except Exception:
@@ -365,10 +353,10 @@ def chat_vision(
     automáticamente a los modelos de VISION_FALLBACKS en orden. Con `model`
     explícito no hay cascada. Lanza ValueError si no hay API key configurada.
     """
-    client = _get_groq_client()
+    client = _get_nvidia_client()
     if not client:
         raise ValueError(
-            "LLM API key no configurada (LLM_API_KEY / NVIDIA_API_KEY / GROQ_API_KEY)"
+            "LLM API key no configurada (LLM_API_KEY / NVIDIA_API_KEY)"
         )
 
     contenido = _paginas_a_contenido(prompt, paginas)
@@ -394,7 +382,7 @@ def chat_vision(
             respuesta = _retry_with_backoff(_call)
             if idx > 0:
                 print(
-                    f"[llm_groq] visión: usando modelo de respaldo '{m}' "
+                    f"[llm_nvidia] visión: usando modelo de respaldo '{m}' "
                     f"(el primario falló)."
                 )
             return respuesta
@@ -403,7 +391,7 @@ def chat_vision(
             es_ultimo = idx == len(modelos) - 1
             if _es_error_modelo(e) and not es_ultimo:
                 print(
-                    f"[llm_groq] visión: modelo '{m}' no disponible ({e}); "
+                    f"[llm_nvidia] visión: modelo '{m}' no disponible ({e}); "
                     f"probando respaldo…"
                 )
                 continue
