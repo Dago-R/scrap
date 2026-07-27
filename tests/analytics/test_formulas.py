@@ -562,11 +562,11 @@ class TestConsistencia:
 
     def test_variable(self):
         s = calcular_consistencia([(0, 10), (1, 10)])
-        assert s == 85.0
+        assert round(s, 2) == round(100 - (0.5 ** 0.5) * 30, 2)
 
     def test_muy_variable(self):
         s = calcular_consistencia([(-2, 10), (2, 10)])
-        assert s == 40.0
+        assert round(s, 2) == round(100 - (8.0 ** 0.5) * 30, 2)
 
     def test_default_un_mes(self):
         assert calcular_consistencia([(0.5, 10)]) == 50.0
@@ -579,9 +579,9 @@ class TestConsistencia:
         assert calcular_consistencia([(0.5, 1), (0.6, 2)]) == 50.0
 
     def test_calcula_con_suficientes_posts(self):
-        """2 meses, 3+2=5 posts → calcula desviación real."""
+        """2 meses, 3+2=5 posts → calcula desviación real (sample variance)."""
         s = calcular_consistencia([(0.0, 3), (1.0, 2)])
-        assert s == 85.0
+        assert round(s, 2) == round(100 - (0.5 ** 0.5) * 30, 2)
 
 
 class TestAtencion:
@@ -1210,9 +1210,9 @@ class TestConsistenciaPostsThreshold:
         assert calcular_consistencia([(0.5, 2), (0.6, 1)]) == 50.0
 
     def test_dos_meses_suficientes_posts(self):
-        """2 meses, 3+3=6 posts (≥5) → calcula desviación."""
+        """2 meses, 3+3=6 posts (≥5) → calcula desviación (sample variance)."""
         s = calcular_consistencia([(0.0, 3), (1.0, 3)])
-        assert s == 85.0
+        assert round(s, 2) == round(100 - (0.5 ** 0.5) * 30, 2)
 
     def test_cuatro_meses_pocos_posts(self):
         """4 meses pero 1+1+1+1=4 posts → default 50."""
@@ -1324,10 +1324,11 @@ class TestICISeveridadAbsoluta:
     def test_z_entre_2_5_y_3_0_con_umbral_2_9_severidad_3(self):
         """z≈2.95 (entre 2.5 y 3.0), umbral_base=2.9 (tema corrupción).
         Alerta se dispara (z>2.9) y severidad=3 (z>2.5 pero z≤3.0),
-        confirmando que la severidad depende del z absoluto, no del umbral."""
+        confirmando que la severidad depende del z absoluto, no del umbral.
+        Usa sample variance (Bessel) para calcular std del historial."""
         historial = [0.10, 0.12, 0.08, 0.11]
         media = sum(historial) / len(historial)
-        var = sum((v - media) ** 2 for v in historial) / len(historial)
+        var = sum((v - media) ** 2 for v in historial) / (len(historial) - 1)
         std = var ** 0.5
         actual = media + 2.95 * std
         alerta = detectar_ici(actual, historial, umbral_base=2.9)
@@ -1335,10 +1336,11 @@ class TestICISeveridadAbsoluta:
         assert alerta["severidad"] == 3
 
     def test_z_2_6_con_umbral_2_0_severidad_3(self):
-        """z≈2.6, umbral_base=2.0 → alerta dispara, severidad 3 (z>2.5)."""
+        """z≈2.6, umbral_base=2.0 → alerta dispara, severidad 3 (z>2.5).
+        Usa sample variance (Bessel) para calcular std del historial."""
         historial = [0.10, 0.12, 0.08, 0.11]
         media = sum(historial) / len(historial)
-        var = sum((v - media) ** 2 for v in historial) / len(historial)
+        var = sum((v - media) ** 2 for v in historial) / (len(historial) - 1)
         std = var ** 0.5
         actual = media + 2.6 * std
         alerta = detectar_ici(actual, historial, umbral_base=2.0)

@@ -609,9 +609,8 @@ def calcular_correlacion_noticias_picos(z_umbral=1.0, ventana_dias=3, db_path=No
 
     # Contar coincidencias dentro de la ventana
     coincidencias = 0
-    fuente_top = ""
-    noticia_top = ""
-    fecha_top = ""
+    fuente_conteo: dict[str, int] = {}
+    fuente_noticia: dict[str, tuple] = {}  # fuente -> (message, fecha)
     for pico in picos:
         try:
             fecha_pico = datetime.strptime(pico["fecha"], "%Y-%m-%d")
@@ -625,11 +624,22 @@ def calcular_correlacion_noticias_picos(z_umbral=1.0, ventana_dias=3, db_path=No
             diff = abs((fecha_pico - ext_date).days)
             if diff <= ventana_dias:
                 coincidencias += 1
-                if not fuente_top:
-                    fuente_top = ext["page_name"] or ""
-                    noticia_top = (ext["message"] or "")[:200]
-                    fecha_top = ext["created_time"][:10]
+                fuente = ext["page_name"] or ""
+                fuente_conteo[fuente] = fuente_conteo.get(fuente, 0) + 1
+                if fuente not in fuente_noticia:
+                    fuente_noticia[fuente] = (
+                        (ext["message"] or "")[:200],
+                        ext["created_time"][:10],
+                    )
                 break
+
+    # Fuente con más coincidencias
+    fuente_top = ""
+    noticia_top = ""
+    fecha_top = ""
+    if fuente_conteo:
+        fuente_top = max(fuente_conteo, key=lambda f: fuente_conteo[f])
+        noticia_top, fecha_top = fuente_noticia.get(fuente_top, ("", ""))
 
     n_picos = len(picos)
     indice = round(coincidencias / n_picos, 2) if n_picos > 0 else 0.0
@@ -708,7 +718,7 @@ def get_fb_monthly_er(db_path=None):
     """ER mensual de FB con misma lógica que engagement_rate_fb().
 
     Si el mes tiene vistas > 0 → ER = engagement / vistas * 100 (basis=views).
-    Si vistas == 0 → ER = engagement / n_posts * 100 (basis=per_post).
+    Si vistas == 0 → ER = engagement / n_posts (basis=per_post, sin *100).
     Retorna lista de (mes, er, total_engagement, n_posts).
     """
     db_path = db_path or _cfg.FACEBOOK_DB
@@ -733,7 +743,7 @@ def get_fb_monthly_er(db_path=None):
             if views > 0:
                 er = round(eng / views * 100, 2)
             elif n_posts > 0:
-                er = round(eng / n_posts * 100, 2)
+                er = round(eng / n_posts, 2)
             else:
                 er = 0.0
             result.append((r["mes"], er, eng, n_posts))
@@ -777,7 +787,7 @@ def get_tk_monthly_er(db_path=None):
     """ER mensual de TikTok con misma lógica que engagement_rate_tk().
 
     Si el mes tiene vistas > 0 → ER = engagement / vistas * 100 (basis=views).
-    Si vistas == 0 → ER = engagement / n_videos * 100 (basis=per_post).
+    Si vistas == 0 → ER = engagement / n_videos (basis=per_post, sin *100).
     Retorna lista de (mes, er, total_engagement, n_videos).
     """
     db_path = db_path or _cfg.TIKTOK_DB
@@ -799,7 +809,7 @@ def get_tk_monthly_er(db_path=None):
             if views > 0:
                 er = round(eng / views * 100, 2)
             elif n_videos > 0:
-                er = round(eng / n_videos * 100, 2)
+                er = round(eng / n_videos, 2)
             else:
                 er = 0.0
             result.append((r["mes"], er, eng, n_videos))

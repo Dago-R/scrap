@@ -123,6 +123,12 @@ NEGATIVE_WORDS: set[str] = {
 # ── Negación ──
 
 NEGATION_WORDS: set[str] = {"no", "nunca", "jamas", "tampoco", "ni", "sin"}
+# NEGATION_WINDOW: número de tokens (incluyendo neutrales) que se invierten
+# tras una palabra de negación. Los tokens neutros (artículos, verbos) también
+# consumen el contador. Ej: "no es muy bueno" -> "es"(1) "muy"(2) "bueno"(3→invertido).
+# Ej: "no en ningún caso está bien" -> los 4 tokens neutros agotan la ventana
+# antes de llegar a "bien", que NO se invierte. Esto es comportamiento intencional
+# de ventana fija (estándar en NLP léxico). No cambiar sin actualizar los tests.
 NEGATION_WINDOW = 3
 
 
@@ -284,9 +290,26 @@ def aggregate_sentiment(texts: list[str]) -> dict:
     }
     score_avg = round(sum(all_scores) / total, 2) if total else 0.0
 
-    dominante = max(labels_count, key=lambda k: (labels_count[k], k))
-    if labels_count[dominante] == 0:
+    # Desempate por SENTIMENT_ORDER (mayor score gana); si todo empata → neutral
+    max_count = max(labels_count.values(), default=0)
+    if max_count == 0:
         dominante = "neutral"
+    else:
+        candidatos = [k for k, v in labels_count.items() if v == max_count]
+        if len(candidatos) == 1:
+            dominante = candidatos[0]
+        else:
+            # Desempate: mayor score absoluto primero; si aún empatan → neutral
+            candidatos_con_score = sorted(
+                candidatos,
+                key=lambda k: abs(SENTIMENT_ORDER.get(k, 0)),
+                reverse=True,
+            )
+            # Si el mayor score absoluto es único, usarlo; si empata en abs → neutral
+            top_abs = abs(SENTIMENT_ORDER.get(candidatos_con_score[0], 0))
+            ganadores = [k for k in candidatos_con_score
+                         if abs(SENTIMENT_ORDER.get(k, 0)) == top_abs]
+            dominante = ganadores[0] if len(ganadores) == 1 else "neutral"
 
     return {
         "total": total,

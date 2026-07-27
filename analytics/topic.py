@@ -224,8 +224,10 @@ def classify_topic(text: str) -> TopicResult:
         # La propuesta se devuelve como clave, no se fuerza a 'no_aplica'.
         # Clave determinista: sorted(tokens)[0] no depende del orden de iteración del set.
         from analytics._propuestas import _registrar_propuesta
+        import hashlib as _hashlib
         palabra_rep = sorted(tokens)[0] if tokens else "desconocido"
-        propuesta_key = f"tema_nuevo_{palabra_rep}"
+        _hash = _hashlib.sha256(text[:100].encode("utf-8")).hexdigest()[:8]
+        propuesta_key = f"tema_nuevo_{palabra_rep}_{_hash}"
         _registrar_propuesta(
             clave_propuesta=propuesta_key,
             ejemplo_texto=text[:200],
@@ -234,6 +236,9 @@ def classify_topic(text: str) -> TopicResult:
         )
         return TopicResult(tema=propuesta_key, scores=scores)
 
+    # En empate de hits, max() elige según orden de inserción de TOPIC_LEXICON
+    # (estable en Python 3.7+). El orden de definición es el criterio de desempate.
+    # No cambiar el orden en TOPIC_LEXICON sin auditar los tests de clasificación.
     best_tema = max(scores, key=lambda k: scores[k])
 
     # Remapear con el catálogo abierto

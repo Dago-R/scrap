@@ -593,7 +593,8 @@ def calcular_sensibilidad_para_alertas(tema, monthly_theme_controversy, fecha_ha
     if len(meses_tema) >= 2:
         media_c = sum(meses_tema) / len(meses_tema)
         if media_c > 0:
-            var_c = sum((v - media_c) ** 2 for v in meses_tema) / len(meses_tema)
+            n_meses = len(meses_tema)
+            var_c = sum((v - media_c) ** 2 for v in meses_tema) / (n_meses - 1) if n_meses > 1 else 0.0
             cv_28d = math.sqrt(var_c) / media_c
 
     velocidad = 0.0
@@ -637,7 +638,8 @@ def detectar_ici(controversia_actual, historial_controversia, umbral_base=2.0):
     if len(historial_controversia) < 4:
         return None
     media = sum(historial_controversia) / len(historial_controversia)
-    varianza = sum((v - media) ** 2 for v in historial_controversia) / len(historial_controversia)
+    n_hist = len(historial_controversia)
+    varianza = sum((v - media) ** 2 for v in historial_controversia) / (n_hist - 1) if n_hist > 1 else 0.0
     desviacion = math.sqrt(varianza)
     z = _zscore(controversia_actual, media, desviacion)
     if z <= umbral_base:
@@ -841,7 +843,8 @@ def calcular_hhi(shares: Sequence[float]):
 
     Donde share_i es la fracción (0-1) del tema i sobre el total.
     Los shares de entrada se esperan como porcentajes (0-100).
-    Retorna HHI en escala 0-1 (dividido entre 10000 para normalizar).
+    Retorna HHI en escala 0-1 (normalizado dividiendo cada share entre
+    la suma total antes de elevar al cuadrado, equivalente al HHI estándar).
     """
     total = sum(n(s) for s in shares)
     if total == 0:
@@ -977,7 +980,8 @@ def calcular_consistencia(promedios_mensuales):
         return CONSISTENCIA_DEFAULT
     avgs = [avg for avg, _ in promedios_mensuales]
     media = sum(avgs) / len(avgs)
-    varianza = sum((v - media) ** 2 for v in avgs) / len(avgs)
+    n_avgs = len(avgs)
+    varianza = sum((v - media) ** 2 for v in avgs) / (n_avgs - 1) if n_avgs > 1 else 0.0
     desviacion = math.sqrt(varianza)
     return _clamp0100(100 - desviacion * 30)
 
@@ -1141,7 +1145,8 @@ def coeficiente_variacion(daily_volumes: Sequence[float]):
     media = sum(vals) / len(vals)
     if media == 0:
         return 0.0, True
-    varianza = sum((v - media) ** 2 for v in vals) / len(vals)
+    n_vals = len(vals)
+    varianza = sum((v - media) ** 2 for v in vals) / (n_vals - 1) if n_vals > 1 else 0.0
     sigma = math.sqrt(varianza)
     cv = sigma / media
     return round(cv, 3), cv <= 0.5

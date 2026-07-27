@@ -145,10 +145,9 @@ def construir_analysis(aprobaciones_agrupadas: list,
         prev_row = next((r for r in fb_monthly_sentiment if r[0] == periodo_prev), None)
         if prev_row is not None:
             avg_score_prev = float(prev_row[1])
-            if abs(avg_score_prev) <= 1.0:
-                tono_score_ayer = round(avg_score_prev * 100, 1)
-            else:
-                tono_score_ayer = round(avg_score_prev, 1)
+            # sentiment_score en DB es SENTIMENT_ORDER (-2..+2).
+            # Normalizar a la misma escala que tono_score_hoy (-100..+100).
+            tono_score_ayer = round(avg_score_prev / 2.0 * 100, 1)
     tendencia = round(tono_score_hoy - tono_score_ayer, 2)
     if tendencia > 1.0:
         etiqueta_tendencia = "mejorando"

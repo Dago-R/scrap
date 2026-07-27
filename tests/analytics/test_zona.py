@@ -24,23 +24,7 @@ def test_zona_sin_mencion():
     assert r.zona == ""
 
 
-# ── Zonas de la Ciudad de Guatemala ──
-
-def test_zona_gt_zona10():
-    r = detectar_zona("Vivo en la zona 10 de la ciudad")
-    assert r.zona == "zona 10"
-    assert r.tipo == "zona_gt"
-
-
-def test_zona_gt_zona1():
-    r = detectar_zona("La zona 1 está muy sucia")
-    assert r.zona == "zona 1"
-
-
-def test_zona_gt_zona4():
-    r = detectar_zona("En la zona 4 hay muchos baches")
-    assert r.zona == "zona 4"
-
+# ── Zonas urbanas de Santa Ana ──
 
 def test_zona_gt_centro_historico():
     r = detectar_zona("El centro histórico necesita restauración")
@@ -48,69 +32,87 @@ def test_zona_gt_centro_historico():
     assert r.tipo == "zona_gt"
 
 
+def test_zona_gt_colonia_magana():
+    r = detectar_zona("En colonia Magana hay muchos baches")
+    assert r.zona == "colonia magana"
+    assert r.tipo == "zona_gt"
+
+
+def test_zona_gt_colonia_flor_blanca():
+    r = detectar_zona("Colonia Flor Blanca necesita más alumbrado")
+    assert r.zona == "colonia flor blanca"
+    assert r.tipo == "zona_gt"
+
+
+def test_zona_gt_residencial():
+    r = detectar_zona("El residencial Santa Barbara tiene buenos parques")
+    assert r.zona == "residencial santa barbara"
+    assert r.tipo == "zona_gt"
+
+
 # ── Municipios ──
 
-def test_municipio_mixco():
-    r = detectar_zona("En Mixco hay muchos problemas de seguridad")
-    assert r.zona == "mixco"
+def test_municipio_santa_ana():
+    r = detectar_zona("En Santa Ana hay muchos problemas de seguridad")
+    assert r.zona == "santa ana"
     assert r.tipo == "municipio"
 
 
-def test_municipio_villa_nueva():
-    r = detectar_zona("Villa Nueva necesita más transporte")
-    assert r.zona == "villa nueva"
+def test_municipio_chalchuapa():
+    r = detectar_zona("Chalchuapa necesita más transporte")
+    assert r.zona == "chalchuapa"
     assert r.tipo == "municipio"
 
 
-def test_municipio_coban():
-    r = detectar_zona("En Cobán hace mucho frío")
-    assert r.zona == "coban"
+def test_municipio_metapan():
+    r = detectar_zona("Metapán tiene buen turismo")
+    assert r.zona == "metapan"
     assert r.tipo == "municipio"
 
 
-def test_municipio_antigua():
-    r = detectar_zona("Antigua Guatemala es turística")
-    assert r.zona == "antigua guatemala"
+def test_municipio_coatepeque():
+    r = detectar_zona("Coatepeque es un municipio bonito")
+    assert r.zona == "coatepeque"
     assert r.tipo == "municipio"
 
 
 # ── Departamentos ──
 
-def test_depto_escuintla():
-    r = detectar_zona("En Escuintla hace mucho calor")
-    assert r.zona == "escuintla"
+def test_depto_santa_ana():
+    r = detectar_zona("El departamento de Santa Ana es importante")
+    assert r.zona == "santa ana"
     assert r.tipo in ("departamento", "municipio")
 
 
-def test_depto_peten():
-    r = detectar_zona("El Petén tiene muchos problemas ambientales")
-    assert r.zona == "peten"
-    assert r.tipo in ("departamento", "municipio")
+def test_depto_ahuachapan():
+    r = detectar_zona("Ahuachapán tiene muchos recursos naturales")
+    assert r.zona == "ahuachapan"
+    assert r.tipo in ("departamento",)
 
 
-def test_depto_huehuetenango():
-    r = detectar_zona("Huehuetenango necesita más escuelas")
-    assert r.zona == "huehuetenango"
-    assert r.tipo in ("departamento", "municipio")
+def test_depto_san_miguel():
+    r = detectar_zona("San Miguel necesita más escuelas")
+    assert r.zona == "san miguel"
+    assert r.tipo in ("departamento",)
 
 
 # ── Prioridad: zona_gt > barrio > municipio > departamento ──
 
 def test_prioridad_zona_vs_depto():
-    r = detectar_zona("La zona 10 de Guatemala necesita más alumbrado")
+    r = detectar_zona("La colonia Magana de Santa Ana necesita más alumbrado")
     assert r.tipo == "zona_gt"
 
 
 def test_prioridad_municipio_vs_depto():
-    r = detectar_zona("Mixco necesita más patrullas en Escuintla")
-    assert r.zona in ("mixco", "escuintla")
+    r = detectar_zona("Chalchuapa tiene problemas en Santa Ana")
+    assert r.zona in ("chalchuapa", "santa ana")
 
 
 # ── Gazetteer no vacío ──
 
 def test_gazetteer_completo():
-    assert len(ZONAS_CONOCIDAS) > 100
-    assert len(DEPARTAMENTOS) >= 22
+    assert len(ZONAS_CONOCIDAS) > 10
+    assert len(DEPARTAMENTOS) == 14
     assert len(ZONAS_GT) > 5
 
 
@@ -141,11 +143,11 @@ def test_aggregate_zonas_vacio():
 
 def test_aggregate_zonas_mixto():
     texts = [
-        "Los baches en la zona 10",
-        "Zona 10 está sucia",
-        "En Mixco hay robos",
+        "Los baches en colonia Magana",
+        "Colonia Magana está sucia",
+        "En Chalchuapa hay robos",
         "El gobierno es corrupto",
-        "Zona 4 necesita luz",
+        "Centro histórico necesita luz",
     ]
     agg = aggregate_zonas(texts)
     assert agg["total"] == 5
@@ -163,10 +165,10 @@ def test_aggregate_zonas_propuestas():
 
 
 def test_aggregate_zonas_una_sola_zona():
-    texts = ["Zona 10 necesita arreglos"] * 5
+    texts = ["Centro histórico necesita arreglos"] * 5
     agg = aggregate_zonas(texts)
-    assert agg["dominante"] == "zona 10"
-    assert agg["pct"]["zona 10"] == 100.0
+    assert agg["dominante"] == "centro historico"
+    assert agg["pct"]["centro historico"] == 100.0
 
 
 # ── 19.7: Suite no modifica data/taxonomias_pendientes.json real ──
@@ -177,7 +179,7 @@ def test_json_pendientes_no_modificado_por_suite():
 
     Usa @pytest.mark.no_taxonomia_mock para saltar el fixture que parchea
     la ruta, y asi leer el archivo real (data/taxonomias_pendientes.json).
-    Antes (Bloque 5.2) se verificaba que estuviera vacio ([]), pero tras
+    Antes (Bloque 5.2) se verificaba que estuviese vacio ([]), pero tras
     la migracion 8.2 puede contener propuestas reales del clasificador.
     Ahora se verifica que cada entrada cumpla el esquema exacto que
     _registrar_propuesta() escribe.
@@ -225,17 +227,16 @@ def test_json_pendientes_no_modificado_por_suite():
         vistos.add(key)
 
 
-# ── 18.5: DEPARTAMENTOS = 22 exactos ──
+# ── 18.5: DEPARTAMENTOS de El Salvador ──
 
-def test_departamentos_exactamente_22():
-    """Guatemala tiene exactamente 22 departamentos."""
-    assert len(DEPARTAMENTOS) == 22
+def test_departamentos_exactamente_14():
+    """El Salvador tiene exactamente 14 departamentos."""
+    assert len(DEPARTAMENTOS) == 14
 
 
 def test_departamentos_nombres_validos():
     """Ninguna entrada de DEPARTAMENTOS contiene caracteres no válidos."""
     import re
-    # Solo letras, espacios, y acentos/ñ esperados en español
     pat = re.compile(r"^[a-záéíóúñü\s]+$")
     for depto in DEPARTAMENTOS:
         assert pat.match(depto), f"DEPARTAMENTO '{depto}' tiene caracteres no válidos"
@@ -246,7 +247,7 @@ def test_municipios_nombres_validos():
     import re
     pat = re.compile(r"^[a-záéíóúñü\s]+$")
     for muni in MUNICIPIOS:
-        assert pat.match(muni), f"MUNICIPIO '{muni}' tiene caracteres no válidos"
+        assert pat.match(muni), f"MUNICIO '{muni}' tiene caracteres no válidos"
 
 
 def test_zonas_gt_nombres_validos():
@@ -286,10 +287,7 @@ def test_propuesta_zona_no_registra_stopwords():
 
 def test_propuesta_zona_no_extrae_de_dentro_de_puede():
     """'puede' no debe matchear como 'de' + candidata."""
-    # Sin \b, "pu|de| circular" matchearía "circular" como candidata
-    # Con \b, "puede" es una palabra completa y "de" no matchea
     resultado = es_propuesta_zona("no se puede circular por aquí")
-    # Debe devolver None o una candidata real, nunca "circular" derivada de "puede"
     if resultado is not None:
         assert resultado != "circular", (
             f"'circular' extraído falsamente de 'puede': regex sin \\b"
@@ -299,11 +297,7 @@ def test_propuesta_zona_no_extrae_de_dentro_de_puede():
 def test_propuesta_zona_regex_nueva_palabra_no_stopword():
     """Una palabra NO en la lista de stopwords pero que caería en match
     a mitad de palabra sin \\b debe ser rechazada por el regex."""
-    # "ardilla" no está en la lista de stopwords
-    # Sin \b: "de|rdilla" matchearía "ardilla" como candidata
-    # Con \b: "de" solo matchea como palabra completa
     resultado = es_propuesta_zona("se puede ver una ardilla en el parque")
-    # "ardilla" no debería extraerse de "puede"
     if resultado is not None:
         assert resultado != "ardilla", (
             f"'ardilla' extraído falsamente de 'puede': regex sin \\b"

@@ -527,11 +527,11 @@ def classify_emotion(text: str, es_oficial: bool = False) -> EmotionResult:
             if len(t) >= 4:
                 palabra_rep = t
                 break
-        else:
-            # Sin palabra >=4 letras (emoji-only, muy corto): hash determinista
-            raw = text.strip().lower().encode("utf-8") if text else b""
-            palabra_rep = hashlib.sha256(raw).hexdigest()[:8]
-        propuesta = f"{familia}_nueva_{palabra_rep}"
+        # Siempre agregar hash para evitar colisiones entre textos distintos
+        # con la misma palabra representativa
+        raw = text.strip().lower().encode("utf-8") if text else b""
+        _hash_suf = hashlib.sha256(raw).hexdigest()[:8]
+        propuesta = f"{familia}_nueva_{palabra_rep}_{_hash_suf}"
         _registrar_propuesta(
             clave_propuesta=propuesta,
             ejemplo_texto=text[:200],

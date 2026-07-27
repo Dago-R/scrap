@@ -56,6 +56,8 @@ def verificar_freshness(path=None, max_dias=7):
 
     try:
         dt_gen = datetime.fromisoformat(generado_en)
+        if dt_gen.tzinfo is None:
+            dt_gen = dt_gen.replace(tzinfo=timezone.utc)
         ahora = datetime.now(timezone.utc)
         dias = (ahora - dt_gen).days
         fresco = dias <= max_dias

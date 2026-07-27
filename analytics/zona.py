@@ -10,62 +10,43 @@ import unicodedata
 from analytics._propuestas import _registrar_propuesta
 
 
-# ── Gazetteer: zonas conocidas de Guatemala ──
+# ── Gazetteer: zonas conocidas de Santa Ana, El Salvador ──
 
-# Departamentos de Guatemala
+# Municipios del departamento de Santa Ana, El Salvador
 DEPARTAMENTOS: set[str] = {
-    "guatemala", "sacatepequez", "chimaltenango", "solola", "totonicapan",
-    "quetzaltenango", "retalhuleu", "suchitepequez", "escuintla",
-    "santa rosa", "jutiapa", "jalapa", "chiquimula", "zacapa",
-    "izabal", "peten", "alta verapaz",
-    "baja verapaz", "quiche", "huehuetenango", "san marcos",
-    "el progreso",
+    "santa ana", "ahuachapan", "sonsonate", "chalatenango",
+    "la libertad", "san salvador", "cuscatlan", "la paz",
+    "cabanas", "san vicente", "usulutan", "san miguel",
+    "morazan", "la union",
 }
 
-# Municipios principales (muestra)
+# Municipios del departamento de Santa Ana
 MUNICIPIOS: set[str] = {
-    "guatemala", "mixco", "villa nueva", "coban", "quetzaltenango",
-    "escuintla", "petapa", "villa canales", "san juan sacatepequez",
-    "san jose pinula", "santa catarina pinula", "fraijanes",
-    "palencia", "chinautla", "san pedro ayampuc", "san pedro sacatepequez",
-    "san juan zapotitlan", "san raymundo", "chuarrancho",
-    "mazatenango", "retalhuleu", "coatepeque", "tonala",
-    "antigua guatemala", "ciudad vieja", "jocotenango", "santa apolonia",
-    "san antonio aguas calientes", "san bartolo aguas calientes",
-    "san lucas sacatepequez", "san miguel duenas", "santiago sacatepequez",
-    "santo domingo xenacoj", "san andres itzapa", "parramos",
-    "tejar", "chimaltenango", "san juan comalapa", "san andres xecul",
-    "san francisco el alto", "totonicapan", "san cristobal totocostepec",
-    "malacatan", "san marcos", "tajumulco", "coatepeque",
-    "huehuetenango", "san ildefonso ixtahuacan", "san pedro necta",
-    "la libertad", "chiantla", "cuilapa", "barberena",
-    "jutiapa", "el adelanto", "zapotitlan", "san jose acatempa",
-    "jalapa", "san pedro pinula", "san luis jilotepeque",
-    "chiquimula", "esquipulas", "copan",
+    "santa ana", "chalchuapa", "metapan", "texistepeque",
+    "coatepeque", "el porvenir", "masahuat", "san antonio pajonal",
+    "san sebastian salitrillo", "santa rosa guachipilin",
+    "santiago de la frontera", "candelaria de la frontera",
 }
 
-# Zonas de la Ciudad de Guatemala
+# Zonas / barrios urbanos de Santa Ana ciudad
 ZONAS_GT: set[str] = {
-    "zona 1", "zona 2", "zona 3", "zona 4", "zona 5", "zona 6",
-    "zona 7", "zona 8", "zona 9", "zona 10", "zona 11", "zona 12",
-    "zona 13", "zona 14", "zona 15", "zona 16", "zona 17", "zona 18",
-    "zona 19", "zona 20", "zona 21",
-    "ciudad de guatemala", "guatemala capital",
-    "centro historico", "zona 1 centro",
+    "centro", "centro historico", "el calvario", "santa lucia",
+    "colonia magana", "colonia flor blanca", "colonia la paz",
+    "colonia modelo", "colonia santa barbara", "colonia san jose",
+    "colonia las palmas", "colonia el estadio",
+    "residencial santa barbara", "reparto santa lucia",
+    "barrio el angel", "barrio san miguelito", "barrio colon",
+    "barrio san rafael", "barrio la cruz",
 }
 
-# Barrios / colonias comunes
+# Colonias y cantones periurbanos de Santa Ana
 BARRIOS: set[str] = {
-    "la aurora", "vista hermosa", "el naranjo", "jardines de la finca",
-    "residenciales", "condado el naranjo", "club campos de quetzaltenango",
-    "el mirador", "lomas de san francisco", "san nicolas",
-    "las americas", "vista al lago", "balcones de san antonio",
-    "zona libre", "zona 4 industrial", "zona 10 industriales",
-    "colonia 10 de octubre", "colonia jose clemencia rojas",
-    "colonia santa fe", "colonia bello aires", "colonia la floresta",
-    "colonia las palmas", "colonia los robles", "colonia reforma",
-    "colonia mariscal", "colonia guerrero", "colonia la conventional",
-    "colonia escuintla", "colonia el rosario", "colonia progreso",
+    "canton el palmar", "canton el nance", "canton san pedro",
+    "canton buena vista", "canton texisio", "lotificacion san jose",
+    "colonia 10 de octubre", "colonia el rosario", "colonia progreso",
+    "colonia san antonio", "colonia vista hermosa", "las piedras",
+    "el mirador", "las colinas", "la cuchilla", "loma linda",
+    "residencial los almendros", "colonia santa ana",
 }
 
 # Unir todo el gazetteer

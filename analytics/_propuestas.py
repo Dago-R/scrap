@@ -100,7 +100,13 @@ def _registrar_propuesta_sin_lock(
     tipo: str,
     familia_mas_cercana: str,
 ) -> None:
-    """Fallback sin lock para entornos sin fcntl (Windows)."""
+    """Fallback sin lock para entornos sin fcntl (Windows).
+
+    Usa rename atómico (tmp → destino) para minimizar riesgo de corrupción
+    en escrituras concurrentes. No es completamente atómico en todos los SO,
+    pero es significativamente más seguro que write directo.
+    """
+    import tempfile
     path = os.path.normpath(_TAXONOMIAS_PATH)
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -129,6 +135,21 @@ def _registrar_propuesta_sin_lock(
             "n_ocurrencias": 1,
         })
 
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    dir_path = os.path.dirname(path)
+    os.makedirs(dir_path, exist_ok=True)
+    try:
+        fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as tmp_f:
+                json.dump(data, tmp_f, ensure_ascii=False, indent=2)
+            os.replace(tmp_path, path)  # rename atómico
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+    except Exception:
+        # Último recurso: write directo (comportamiento original)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
