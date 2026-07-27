@@ -115,7 +115,7 @@ def seccion_revisar_lote() -> None:
             "quedarán marcados para que los completes."
         )
         if st.button("🔍 Extraer y revisar lote", width='stretch', type="primary"):
-            from ingreso_extraccion import extraer_posts_desde_archivos
+            from dashboard.ingreso_extraccion import extraer_posts_desde_archivos
             import uuid
 
             n = len(pendientes)
@@ -518,7 +518,7 @@ def seccion_importar_json():
             st.error("Selecciona o escribe una fuente primero.")
         else:
             import json as _json
-            from ingreso_extraccion import _aplicar_contrato
+            from dashboard.ingreso_extraccion import _aplicar_contrato
 
             try:
                 contenido = archivo_json.read().decode("utf-8")

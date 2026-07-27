@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone
 
 
-def verificar_freshness(path="data/analysis.json", max_dias=7):
+def verificar_freshness(path=None, max_dias=7):
     """Verifica si analysis.json tiene datos recientes.
 
     Args:
@@ -22,6 +22,10 @@ def verificar_freshness(path="data/analysis.json", max_dias=7):
             - fecha_generacion: str o None
             - mensaje: str legible
     """
+    if path is None:
+        path = str(
+            __import__("pathlib").Path(__file__).parent.parent / "data" / "analysis.json"
+        )
     if not os.path.exists(path):
         return {
             "fresco": False,

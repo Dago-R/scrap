@@ -24,6 +24,7 @@ from dashboard.estilos_override import CSS_OVERRIDE
 from dashboard.dash_ui import _page_head
 from dashboard.dash_ingesta import seccion_cargar_contenido, seccion_importar_json
 from dashboard.editor_db import seccion_editar_db
+from dashboard.dash_temas import render_revisor_temas
 from dashboard.tema_aprobaciones import (
     asegurar_tabla_en_tiktok,
     asegurar_computed_tiktok,
@@ -57,9 +58,6 @@ st.set_page_config(
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(CSS_OVERRIDE, unsafe_allow_html=True)
 
-# from auth import require_auth  # deshabilitado — auth.py se mantiene intacto
-# require_auth()
-
 # ─── Topbar (uso interno del analista) ─────
 st.markdown("""
 <div class="topbar">
@@ -83,3 +81,14 @@ with tab_json:
     seccion_importar_json()
 with tab_editor:
     seccion_editar_db()
+
+# ── Revisión manual de temas ──────────────────────────────────────────
+st.markdown("---")
+st.subheader("Revisión de Temas")
+from src.config import Config as _Cfg
+_cfg_temas = _Cfg()
+render_revisor_temas(
+    db_path=_cfg_temas.FACEBOOK_DB,
+    tabla="fb_comments",
+    col_id="comment_id",
+)

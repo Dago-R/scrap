@@ -257,6 +257,19 @@ def construir_analysis(aprobaciones_agrupadas: list,
             if emo_result.emocion and emo_result.emocion != "calma":
                 evidencia_por_emocion.setdefault(emo_result.emocion, set()).add(post_id)
 
+    # ── Mapear tema → zona (necesario para bloque1 y bloque3) ──
+    zona_por_tema: dict[str, str] = {}
+    if comentarios_texts:
+        for i, text in enumerate(comentarios_texts):
+            topic_result = topic_results_by_text.get(i)
+            if topic_result is None:
+                topic_result = classify_topic(text)
+            zona_result = detectar_zona(text)
+            if zona_result.zona and topic_result.tema:
+                if topic_result.tema not in zona_por_tema:
+                    zona_por_tema[topic_result.tema] = zona_result.zona
+            es_propuesta_zona(text)
+
     # ── §G: HHI de concentración temática ──
     shares_para_hhi = [r.get("share", 0) for r in ramas if isinstance(r, dict)]
     hhi = calcular_hhi(shares_para_hhi)
@@ -544,6 +557,10 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "narrativa": "",
             "enlaces_referencia": [],
         },
+        "termometro_lugares": _construir_termometro_lugares(
+            fb_anger_by_zone or [],
+            zona_por_tema,
+        ),
     }
 
     # ── Bloque 2: Voces ──
@@ -627,6 +644,23 @@ def construir_analysis(aprobaciones_agrupadas: list,
         })
 
     bloque2 = {
+        "mapa_publicos": {
+            "pct_simpatizantes": pct_favorable,
+            "pct_neutrales": pct_neutral_s,
+            "pct_criticos": pct_critico,
+            "n_total": n_total,
+            "n_simpatizantes": round(n_total * pct_favorable / 100) if n_total > 0 else 0,
+            "n_neutrales": round(n_total * pct_neutral_s / 100) if n_total > 0 else 0,
+            "n_criticos": round(n_total * pct_critico / 100) if n_total > 0 else 0,
+            "total_posts_analizados": meta.get("total_posts_analizados", 0),
+            "narrativa": "",
+            "enlaces_referencia": [],
+            "formula_usada": (
+                "pct_simpatizantes = pct_favorable (classify_sentiment léxico). "
+                "pct_criticos = pct_critico. pct_neutrales = 100 - fav - crit. "
+                "n_* = round(n_total * pct / 100)."
+            ),
+        },
         "voces_influencia": voces,
         "polarizacion": {
             "indice": polarizacion_indice,
@@ -639,18 +673,6 @@ def construir_analysis(aprobaciones_agrupadas: list,
     }
 
     # ── Bloque 3: Friccion ──
-    zona_por_tema: dict[str, str] = {}
-    if comentarios_texts:
-        for i, text in enumerate(comentarios_texts):
-            topic_result = topic_results_by_text.get(i)
-            if topic_result is None:
-                topic_result = classify_topic(text)
-            zona_result = detectar_zona(text)
-            if zona_result.zona and topic_result.tema:
-                if topic_result.tema not in zona_por_tema:
-                    zona_por_tema[topic_result.tema] = zona_result.zona
-            es_propuesta_zona(text)
-
     fricciones = []
     for t in aprobaciones_agrupadas:
         if t.get("critica", 0) > 0:
@@ -942,6 +964,25 @@ def construir_analysis(aprobaciones_agrupadas: list,
     ]
     bloque4 = {sec: {"narrativa": "", "enlaces_referencia": []} for sec in bloque4_secciones}
 
+    bloque4["recomendaciones_basadas_en_metricas"] = _construir_recomendaciones(
+        pct_critico=pct_critico,
+        riesgo=round(rr_100, 1),
+        semaforo=semaforo,
+        engagement=er_display,
+        polarizacion=polarizacion_indice,
+        n_fricciones=len(fricciones),
+    )
+
+    bloque4["resumen_evidencia"] = {
+        "total_enlaces_analizados": len(meta.get("enlaces_analizados", [])),
+        "total_reacciones_sumadas": meta.get("total_reacciones_sumadas", 0),
+        "total_impresiones": meta.get("total_impresiones_vistas", 0),
+        "total_comentarios": meta.get("total_comentarios_analizados", n_total),
+        "periodo_cobertura": periodo,
+        "narrativa": "",
+        "enlaces_referencia": [],
+    }
+
     temas_emergentes_evolucion = []
     for e in emergentes_result.get("emergentes", []):
         if e["tendencia"] in ("acelerando", "desacelerando"):
@@ -997,6 +1038,145 @@ def construir_analysis(aprobaciones_agrupadas: list,
         "bloque3": bloque3,
         "bloque4": bloque4,
     }
+
+
+def _construir_termometro_lugares(
+    fb_anger_by_zone: list,
+    zona_por_tema: dict,
+) -> list:
+    """Construye lista de lugares con nivel de tensión para el termómetro.
+
+    Fórmula nivel_tension:
+        nivel_tension = clamp(pct_negativos * 100, 0, 100)
+        donde pct_negativos = negativos / total si total > 0, else 0.
+
+    Resultado ordenado por nivel_tension descendente.
+    """
+    lugares = []
+    for zona_data in fb_anger_by_zone:
+        zona_nombre = zona_data.get("zona", "")
+        if not zona_nombre:
+            continue
+        total = zona_data.get("total", 0)
+        negativos = zona_data.get("negativos", 0)
+        pct_neg = zona_data.get("pct_negativos", 0)
+        nivel_tension = min(max(round(pct_neg * 100, 1), 0), 100)
+        tema_dominante = ""
+        n_tema_dom = 0
+        for tema, zona in zona_por_tema.items():
+            if zona == zona_nombre:
+                tema_dominante = tema
+                n_tema_dom = negativos
+                break
+        lugares.append({
+            "lugar": zona_nombre,
+            "nivel_tension": nivel_tension,
+            "n_comentarios": total,
+            "emocion_dominante": "",
+            "tema_dominante": tema_dominante,
+            "n_tema_dominante": n_tema_dom,
+            "citas_ejemplo": [],
+            "narrativa": "",
+            "enlaces_referencia": [],
+        })
+    lugares.sort(key=lambda x: x["nivel_tension"], reverse=True)
+    return lugares
+
+
+def _construir_recomendaciones(
+    pct_critico: float,
+    riesgo: float,
+    semaforo: str,
+    engagement: float,
+    polarizacion: float,
+    n_fricciones: int,
+) -> list:
+    """Genera recomendaciones accionables basadas en métricas calculadas.
+
+    Reglas (en orden de prioridad):
+    1. Si semaforo == 'rojo' o riesgo > 60: añadir rec alta prioridad.
+    2. Si pct_critico > 40: añadir rec media.
+    3. Si polarizacion > 0.5: añadir rec media.
+    4. Si engagement < 5.0: añadir rec baja.
+    5. Si n_fricciones >= 3: añadir rec alta.
+
+    Cada rec: {numero, prioridad, metrica_base, valor_metrica, recomendacion, umbral_accion}
+    """
+    recos = []
+    num = 1
+
+    if semaforo == "rojo" or riesgo > 60:
+        recos.append({
+            "numero": num,
+            "prioridad": "alta",
+            "metrica_base": "indice_riesgo",
+            "valor_metrica": riesgo,
+            "recomendacion": (
+                "El índice de riesgo supera el umbral crítico. "
+                "Activar protocolo de respuesta institucional inmediata: "
+                "comunicado oficial, monitoreo cada 6 horas."
+            ),
+            "umbral_accion": "riesgo > 60 o semáforo rojo",
+        })
+        num += 1
+
+    if n_fricciones >= 3:
+        recos.append({
+            "numero": num,
+            "prioridad": "alta",
+            "metrica_base": "n_temas_friccion",
+            "valor_metrica": n_fricciones,
+            "recomendacion": (
+                f"Se detectaron {n_fricciones} puntos de fricción activos. "
+                "Priorizar respuesta a los temas con mayor concentración de crítica."
+            ),
+            "umbral_accion": "n_temas_friccion >= 3",
+        })
+        num += 1
+
+    if pct_critico > 40:
+        recos.append({
+            "numero": num,
+            "prioridad": "media",
+            "metrica_base": "pct_critico",
+            "valor_metrica": round(pct_critico, 1),
+            "recomendacion": (
+                f"El {pct_critico:.0f}% de la conversación es crítica. "
+                "Revisar narrativa institucional y considerar contenido de respuesta directa."
+            ),
+            "umbral_accion": "pct_critico > 40%",
+        })
+        num += 1
+
+    if polarizacion > 0.5:
+        recos.append({
+            "numero": num,
+            "prioridad": "media",
+            "metrica_base": "indice_polarizacion",
+            "valor_metrica": round(polarizacion, 3),
+            "recomendacion": (
+                "La audiencia está altamente polarizada. "
+                "Evitar contenido divisivo; priorizar mensajes de unidad y logros concretos."
+            ),
+            "umbral_accion": "polarizacion > 0.5",
+        })
+        num += 1
+
+    if engagement < 5.0 and engagement > 0:
+        recos.append({
+            "numero": num,
+            "prioridad": "baja",
+            "metrica_base": "engagement_rate",
+            "valor_metrica": round(engagement, 2),
+            "recomendacion": (
+                f"El engagement rate es bajo ({engagement:.1f}%). "
+                "Experimentar con formatos de mayor interacción: preguntas directas, encuestas, videos cortos."
+            ),
+            "umbral_accion": "engagement_rate < 5%",
+        })
+        num += 1
+
+    return recos
 
 
 def _clasificar_concentracion(ramas):

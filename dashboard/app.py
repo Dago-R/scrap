@@ -918,18 +918,13 @@ with tab_pulso:
         iq_narr = safe_text(_get(iq, "narrativa", default="—"))
         iq_comp = iq.get("componentes", {})
         _IQ_LABELS = {
-            "aprobacion": "Aprobación",
-            "conexion": "Conexión",
-            "tranquilidad": "Tranquilidad",
-            "diversidad": "Diversidad",
-            "presencia": "Presencia",
-            "consistencia": "Consistencia",
-            "atencion": "Atención",
+            k: v.get("label", k)
+            for k, v in DIMENSION_LABELS.items()
         }
         chips_iq = "".join(
             f'<span style="font-size:11px;padding:2px 8px;background:var(--bg-elevated);'
             f'border-radius:10px;color:var(--fg-secondary);margin:2px">'
-            f'{_IQ_LABELS.get(k, k.capitalize())} '
+            f'{_IQ_LABELS.get(k.removeprefix("fb_").removeprefix("tk_"), k.removeprefix("fb_").removeprefix("tk_").replace("_", " ").capitalize())} '
             f'<strong>{_n(v):.0f}</strong></span>'
             for k, v in iq_comp.items()
             if _n(v, default=None) is not None

@@ -23,6 +23,9 @@ Thumbs.db
 
 # # Data (bases locales, NUNCA versionar)
 data/*.db
+*.db
+*.sqlite
+*.sqlite3
 
 # # Outputs (se regeneran desde el dashboard)
 outputs/*.json

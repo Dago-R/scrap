@@ -1,4 +1,5 @@
 import sqlite3, os
+import sys
 
 DATA_DIR = os.environ.get("DATA_DIR", "data")
 
@@ -19,6 +20,16 @@ PLAN = {
         "external_pages", "tema_aprobaciones",
     ],
 }
+
+_confirm = input(
+    "\n⚠️  ADVERTENCIA: Este script borrará TODAS las filas de TODAS las tablas.\n"
+    f"   DATA_DIR apunta a: {os.path.abspath(DATA_DIR)}\n"
+    "   Escribe 'CONFIRMAR' (en mayúsculas) para continuar: "
+).strip()
+
+if _confirm != "CONFIRMAR":
+    print("Operación cancelada.")
+    sys.exit(0)
 
 for dbname, tablas in PLAN.items():
     path = os.path.join(DATA_DIR, dbname)

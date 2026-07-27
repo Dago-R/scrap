@@ -20,10 +20,10 @@ def test_panel_carga_no_tiene_pestanas_aprobacion():
     assert "Aprobar temas" not in src
 
 
-def test_panel_carga_no_importa_render_revisor():
-    """panel_carga.py ya NO importa render_revisor_temas."""
+def test_panel_carga_importa_render_revisor():
+    """panel_carga.py importa render_revisor_temas (WARN-01)."""
     src = _leer_fuente()
-    assert "render_revisor_temas" not in src
+    assert "render_revisor_temas" in src
 
 
 def test_panel_carga_tres_pestanas():

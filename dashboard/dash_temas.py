@@ -8,7 +8,6 @@ Solo los comentarios aprobados cuentan en las tarjetas de Temas Emergentes.
 """
 
 import json
-import streamlit as st
 
 from analytics.topic import classify_topic
 from dashboard.tema_aprobaciones import (
@@ -69,6 +68,8 @@ def render_revisor_temas(db_path, tabla="fb_comments", col_id="comment_id",
         col_parent: columna del comment_id padre (solo Facebook tiene
             parent_comment_id). Si es None, no se busca contexto padre.
     """
+    import streamlit as st
+
     tiene_padre = col_parent is not None
 
     with st.expander("✍️ Revisar y aprobar temas", expanded=False):

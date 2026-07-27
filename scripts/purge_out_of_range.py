@@ -19,6 +19,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import os as _os
+import sys as _sys
+_REPO_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _REPO_ROOT not in _sys.path:
+    _sys.path.insert(0, _REPO_ROOT)
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CONFIG_PATH = ROOT / "src" / "config.py"
