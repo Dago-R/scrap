@@ -17,7 +17,7 @@ from typing import Any
 
 from dashboard.llm_nvidia import (
     chat_vision,
-    groq_disponible,
+    llm_disponible,
 )
 
 
@@ -925,8 +925,8 @@ def extraer_posts_desde_archivos(archivos: list, plataforma: str) -> dict:
         {"posts": [contrato, ...]} con un contrato por post detectado.
         En error grave: {"error": "<motivo>"}.
     """
-    if not groq_disponible():
-        return {"error": "GROQ_API_KEY no configurada en variable de entorno ni st.secrets"}
+    if not llm_disponible():
+        return {"error": "LLM_API_KEY / NVIDIA_API_KEY no configurada en variable de entorno ni st.secrets"}
 
     if not archivos:
         return {"error": "No se recibieron archivos"}
@@ -1002,8 +1002,8 @@ def extraer_post_desde_capturas(imagenes: list, plataforma: str) -> dict:
         Dict con el contrato JSON estructurado.
         En error grave retorna {"error": "<motivo>"}.
     """
-    if not groq_disponible():
-        return {"error": "GROQ_API_KEY no configurada en variable de entorno ni st.secrets"}
+    if not llm_disponible():
+        return {"error": "LLM_API_KEY / NVIDIA_API_KEY no configurada en variable de entorno ni st.secrets"}
 
     if not imagenes:
         return {"error": "No se recibieron imágenes"}

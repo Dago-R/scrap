@@ -83,14 +83,6 @@ def _lista_env(nombre, default):
 
 # ── Configuración desde entorno ──
 
-TEXT_MODEL = _primer_env(
-    "LLM_TEXT_MODEL", "GROQ_TEXT_MODEL",
-    default="deepseek-ai/deepseek-v4-flash",
-)
-VERIFIER_MODEL = _primer_env(
-    "LLM_VERIFIER_MODEL",
-    default="z-ai/glm-5.1",
-)
 VISION_MODEL = _primer_env(
     "LLM_VISION_MODEL", "GROQ_VISION_MODEL",
     default="qwen/qwen3.5-397b-a17b",
@@ -400,54 +392,4 @@ def chat_vision(
         raise ultimo_exc
 
 
-# ── chat_texto: prompt textual → texto ──
 
-def chat_texto(
-    prompt: str,
-    max_tokens: int = 4096,
-    temperature: float = 0.7,
-    json: bool = False,
-    model: str | None = None,
-) -> tuple[str, str, str | None]:
-    """Envía un prompt de texto al modelo de texto.
-
-    `model` permite forzar un modelo distinto al TEXT_MODEL por defecto (lo usa
-    la cascada para invocar al verificador). Si json=True y el modo JSON está
-    activo, pide response_format json_object.
-    Usa el cliente de texto (`_get_text_client`), que puede apuntar a un
-    proveedor distinto del de visión.
-    Lanza ValueError si no hay API key configurada.
-
-    Devuelve una tupla: (content, finish_reason, reasoning_content).
-    reasoning_content puede ser None si el proveedor no lo expone.
-    """
-    client = _get_text_client()
-    if not client:
-        raise ValueError(
-            "LLM API key no configurada (LLM_TEXT_API_KEY / OPENCODE_API_KEY / LLM_API_KEY)"
-        )
-
-    messages = [{"role": "user", "content": prompt}]
-    kwargs = {
-        "model": model or TEXT_MODEL,
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-    if json and JSON_MODE:
-        kwargs["response_format"] = {"type": "json_object"}
-
-    # DeepSeek en NIM: apagar razonamiento explícitamente para no agotar max_tokens
-    if _es_modelo_deepseek(kwargs["model"]):
-        kwargs["extra_body"] = {"chat_template_kwargs": {"thinking": False}}
-
-    def _call():
-        resp = client.chat.completions.create(**kwargs)
-        choice = resp.choices[0]
-        content = choice.message.content
-        finish_reason = choice.finish_reason
-        # Some providers (e.g., DeepSeek on NIM) expose reasoning_content on the message
-        reasoning_content = getattr(choice.message, "reasoning_content", None)
-        return content, finish_reason, reasoning_content
-
-    return _retry_with_backoff(_call)
