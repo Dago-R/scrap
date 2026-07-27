@@ -1,0 +1,251 @@
+"""
+Patch para analytics/emotion.py — EMOTION_LEXICON
+Amplía la cobertura de vocabulario deportivo y festivo en cuatro categorías.
+
+INSTRUCCIONES DE APLICACIÓN:
+Fusionar cada bloque de semillas con el set existente en EMOTION_LEXICON.
+El matcher normaliza acentos antes de comparar, así que se puede escribir
+con o sin tilde — se usa consistencia con el estilo del léxico existente.
+
+Recuerda: el match de una palabra sola es EXACTO por token.
+"gol" matchea "gol" pero NO "goles", "golazo", "goool".
+Cada variante necesita su propia entrada si se quiere cubrir.
+Las frases con espacio se buscan como substring del texto normalizado.
+"""
+
+# ─────────────────────────────────────────────
+# 1. euforia — celebración intensa, vocabulario de gol y victoria
+#    Hoy solo tiene: euforico, euforia, increible, emocionado/a,
+#    espectacular, brutal, brutalisimo, desbordado/a, extremo/a,
+#    gloria, triple, wow, wao, genialisimo, fantastico
+# ─────────────────────────────────────────────
+EUFORIA_NUEVAS = {
+    # Gol y sus variantes ortográficas/enfáticas
+    "gol",
+    "goles",
+    "golazo",
+    "goool",
+    "gooool",
+    "goooool",
+    "gooooool",
+
+    # Victoria y campeonato
+    "victoria",
+    "victorias",
+    "campeon",
+    "campeones",
+    "campeona",
+    "campeonas",
+    "campeonato",
+    "titulo",
+    "titulos",
+    "trofeo",
+    "copa",
+
+    # Celebración activa
+    "celebrando",
+    "celebracion",
+    "festejando",
+    "festejo",
+    "fiesta",
+    "fiestas",
+    "ganamos",
+    "ganaron",
+    "ganaste",
+    "ganaron",
+    "lo logramos",          # frase multi-palabra (substring)
+    "lo hicieron",          # frase multi-palabra
+    "que golazo",           # frase multi-palabra
+    "que campeon",          # frase multi-palabra
+    "que campeones",        # frase multi-palabra
+
+    # Vivas y exclamaciones de triunfo
+    "viva",
+    "vivan",
+    "arriba",
+    "ole",
+    "olee",
+    "oleee",
+    "oleeee",
+    "eso es",               # frase multi-palabra
+    "asi se hace",          # frase multi-palabra
+    "asi se gana",          # frase multi-palabra
+
+    # Equipos y selección (contexto español/centroamericano)
+    "espana",               # normalizado sin tilde; matchea "españa"
+    "la roja",              # frase multi-palabra
+    "la seleccion",         # frase multi-palabra
+    "la furia",             # frase multi-palabra (La Furia Roja)
+
+    # Jugadores por nombre de pila frecuentes en comentarios SV
+    # (solo los que generaron propuestas en este post)
+    "yamal",
+    "gabi",
+    "pedri",
+    "morata",
+    "jose",                 # cubre "jose" en contexto de gol/euforia
+                            # NOTA: "jose" es ambiguo fuera de contexto deportivo;
+                            # monitorear si genera falsos positivos en otros posts.
+}
+
+# ─────────────────────────────────────────────
+# 2. alegria — celebración moderada, júbilo colectivo
+#    Hoy tiene: alegre, alegria, feliz, contento/a, gozo,
+#    encantado/a, disfruto, gustoso/a, satisfecho/a,
+#    bienestar, regocijo, sonrisa, divertido/a
+# ─────────────────────────────────────────────
+ALEGRIA_NUEVAS = {
+    # Júbilo colectivo moderado
+    "que alegria",          # frase multi-palabra
+    "que bonito",           # frase multi-palabra
+    "que lindo",            # frase multi-palabra
+    "que bien",             # frase multi-palabra
+    "muy bien",             # frase multi-palabra
+    "que bueno",            # frase multi-palabra
+    "que rico",             # frase multi-palabra (uso coloquial SV: "qué rico verlos ganar")
+    "me alegra",            # frase multi-palabra
+    "me alegro",
+    "que emocion",          # frase multi-palabra
+    "emocion",
+    "emocionante",
+    "lindo",
+    "lindos",
+    "linda",
+    "lindas",
+    "hermoso",
+    "hermosa",
+    "bonito",
+    "bonita",
+    "precioso",
+    "preciosa",
+    "disfrutando",
+    "disfrutamos",
+    "gozando",
+    "gozamos",
+    "vamos",                # "vamos" celebratorio (ambiguo pero mayoritariamente positivo en SV)
+    "animo",
+    "fuerza",
+    "adelante",
+    "que noche",            # frase multi-palabra (contexto: noche del partido)
+    "que partido",          # frase multi-palabra
+    "que tarde",            # frase multi-palabra (contexto: tarde del partido)
+    "lograron",
+    "lo lograron",          # frase multi-palabra
+    "gran partido",         # frase multi-palabra
+    "gran noche",           # frase multi-palabra
+    "bien jugado",          # frase multi-palabra
+    "bien hecho",           # frase multi-palabra
+}
+
+# ─────────────────────────────────────────────
+# 3. amor_civico — identidad comunitaria y orgullo local
+#    Hoy tiene: amor, cariño, aprecio, comunidad, hermanos,
+#    hermandad, patria, tierra, queremos, unidos, solidaridad,
+#    fraternidad
+#    Faltan: orgullo local, identidad municipal, gentilicios
+# ─────────────────────────────────────────────
+AMOR_CIVICO_NUEVAS = {
+    # Orgullo e identidad
+    "orgullo",
+    "orgulloso",
+    "orgullosa",
+    "orgullosos",
+    "orgullosas",
+    "somos",                # "somos Santa Ana", "somos campeones"
+    "nuestra santa ana",    # frase multi-palabra
+    "mi santa ana",         # frase multi-palabra
+    "santa ana",            # frase multi-palabra — OJO: puede ser neutro en menciones de lugar;
+                            # el scorer de contexto debería ponderar, pero cubre el caso positivo
+    "mi municipio",         # frase multi-palabra
+    "nuestro municipio",    # frase multi-palabra
+    "mi ciudad",            # frase multi-palabra
+    "nuestra ciudad",       # frase multi-palabra
+    "mi pueblo",            # frase multi-palabra
+    "nuestro pueblo",       # frase multi-palabra
+    "santaneco",
+    "santaneca",
+    "santanecos",
+    "santanecas",
+    "nuestra alcaldia",     # frase multi-palabra
+    "nuestro alcalde",      # frase multi-palabra
+    "juntos",
+    "todos juntos",         # frase multi-palabra
+    "union",
+    "unidad",
+    "nuestra comunidad",    # frase multi-palabra
+    "mi comunidad",         # frase multi-palabra
+    "el municipio",         # frase multi-palabra
+    "nuestro municipio",    # frase multi-palabra
+    "amo santa ana",        # frase multi-palabra
+    "quiero santa ana",     # frase multi-palabra
+}
+
+# ─────────────────────────────────────────────
+# 4. reconocimiento — agradecimiento a la institución
+#    Hoy tiene: agradezco, gracias, felicito, bravo, buen trabajo,
+#    reconocimiento, aprecio, bendiciones, excelente, gracias por,
+#    mi agradecimiento
+#    Faltan: frases con objeto de agradecimiento específico
+# ─────────────────────────────────────────────
+RECONOCIMIENTO_NUEVAS = {
+    # Frases con objeto (lo que agradecen concretamente)
+    "gracias por la pantalla",      # frase multi-palabra — este post específico
+    "gracias por traer",            # frase multi-palabra
+    "gracias por el evento",        # frase multi-palabra
+    "gracias por la actividad",     # frase multi-palabra
+    "gracias por la iniciativa",    # frase multi-palabra
+    "gracias al alcalde",           # frase multi-palabra
+    "gracias alcalde",              # frase multi-palabra
+    "gracias edil",                 # frase multi-palabra
+    "gracias municipalidad",        # frase multi-palabra
+    "gracias municipio",            # frase multi-palabra
+    "gracias alcaldia",             # frase multi-palabra
+    "gracias a la alcaldia",        # frase multi-palabra
+    "gracias a la municipalidad",   # frase multi-palabra
+    "gracias por pensar",           # frase multi-palabra ("gracias por pensar en nosotros")
+    "gracias por organizar",        # frase multi-palabra
+    "gracias por hacer",            # frase multi-palabra
+    "muy buena idea",               # frase multi-palabra
+    "buena idea",                   # frase multi-palabra
+    "gran iniciativa",              # frase multi-palabra
+    "linda iniciativa",             # frase multi-palabra
+    "buena iniciativa",             # frase multi-palabra
+    "que iniciativa",               # frase multi-palabra
+    "excelente iniciativa",         # frase multi-palabra
+    "excelente idea",               # frase multi-palabra
+    "que buena idea",               # frase multi-palabra
+    "que detalle",                  # frase multi-palabra (SV: "qué detalle del alcalde")
+    "buen detalle",                 # frase multi-palabra
+    "bonito detalle",               # frase multi-palabra
+    "lindo detalle",                # frase multi-palabra
+    "felicitaciones al alcalde",    # frase multi-palabra
+    "felicitaciones al edil",       # frase multi-palabra
+    "felicitaciones a la alcaldia", # frase multi-palabra
+}
+
+
+# ─────────────────────────────────────────────
+# RESUMEN PARA APLICAR EN emotion.py
+# ─────────────────────────────────────────────
+# En EMOTION_LEXICON, fusionar con update():
+#
+#   EMOTION_LEXICON["euforia"].update(EUFORIA_NUEVAS)
+#   EMOTION_LEXICON["alegria"].update(ALEGRIA_NUEVAS)
+#   EMOTION_LEXICON["amor_civico"].update(AMOR_CIVICO_NUEVAS)
+#   EMOTION_LEXICON["reconocimiento"].update(RECONOCIMIENTO_NUEVAS)
+#
+# ADVERTENCIA sobre "jose" en euforia:
+#   Es el único token ambiguo del lote. Si en posts no deportivos aparece
+#   alguien llamado "José" y el comentario es negativo, podría clasificar
+#   incorrectamente. Monitorear en los próximos 2 períodos y retirar si
+#   genera ruido. Alternativa: reemplazar por la frase multi-palabra
+#   "jose gol" o eliminarlo del patch.
+#
+# ADVERTENCIA sobre "santa ana" en amor_civico:
+#   Como substring de texto normalizado, puede aparecer en comentarios
+#   neutros o críticos que simplemente mencionan el lugar. El scorer de
+#   contexto de classify_emotion() debería absorber el ruido porque
+#   necesita score acumulado para ganar — una sola mención de "santa ana"
+#   no va a superar a categorías con más tokens en el mismo comentario.
+#   Aceptable.
+# ─────────────────────────────────────────────

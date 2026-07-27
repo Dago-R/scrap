@@ -1,0 +1,19 @@
+{
+  "periodo": "2026-04",
+  "fecha_datos_hasta": "2026-04-30",
+  "por_tema": {},
+  "por_emocion": {
+    "enojo": [
+      "p1"
+    ],
+    "alegria": [
+      "p2"
+    ],
+    "dolor": [
+      "p3"
+    ],
+    "indignacion": [
+      "p4"
+    ]
+  }
+}

@@ -177,126 +177,6 @@ def seccion_revisar_lote() -> None:
             status.update(label=f"✅ Extracción completada ({n_total} posts)", state="complete", expanded=False)
             st.rerun()
 
-        # ── Vía alterna: importar JSON ya extraído ──
-        st.markdown("---")
-        st.markdown("#### 📥 Importar JSON extraído externamente")
-        st.caption(
-            "Si ya tienes el JSON generado por otro modelo (Gemini, ChatGPT, etc.), "
-            "sube aquí para aplicar directamente sin usar la IA."
-        )
-
-        if len(pendientes) > 1:
-            opciones_pendientes = [
-                f"{p['fuente']} ({p['plataforma']})" for p in pendientes
-            ]
-            idx_seleccionado = st.selectbox(
-                "Selecciona el item pendiente",
-                range(len(opciones_pendientes)),
-                format_func=lambda i: opciones_pendientes[i],
-                key="import_json_select",
-            )
-            item_seleccionado = pendientes[idx_seleccionado]
-        else:
-            item_seleccionado = pendientes[0]
-
-        archivo_json = st.file_uploader(
-            "Importar JSON ya extraído (opcional)",
-            type=["json"],
-            key="import_json_uploader",
-        )
-
-        if st.button("📥 Aplicar JSON importado", key="btn_importar_json"):
-            if not archivo_json:
-                st.error("Sube un archivo JSON primero.")
-            else:
-                import json as _json
-                from ingreso_extraccion import _aplicar_contrato
-
-                try:
-                    contenido = archivo_json.read().decode("utf-8")
-                    datos_json = _json.loads(contenido)
-                except (UnicodeDecodeError, _json.JSONDecodeError) as e:
-                    st.error(f"El archivo no es un JSON válido: {e}")
-                else:
-                    if (
-                        not isinstance(datos_json, dict)
-                        or "posts" not in datos_json
-                        or not isinstance(datos_json["posts"], list)
-                    ):
-                        st.error('El JSON debe tener la forma {"posts": [...]}.')
-                    else:
-                        posts_raw = datos_json["posts"]
-                        if not posts_raw:
-                            st.error("El JSON no contiene posts.")
-                        else:
-                            plat_extraccion = (
-                                "facebook"
-                                if item_seleccionado["plataforma"] == "externos"
-                                else item_seleccionado["plataforma"]
-                            )
-                            nuevos_items = []
-                            error_msg = None
-
-                            for i, post_crudo in enumerate(posts_raw):
-                                try:
-                                    post_normalizado = _aplicar_contrato(
-                                        post_crudo, plat_extraccion
-                                    )
-                                except Exception as e:
-                                    error_msg = (
-                                        f"Error al procesar post {i+1} del JSON: {e}"
-                                    )
-                                    break
-
-                                enlace_auto = (
-                                    post_normalizado.get("enlace") or {}
-                                ).get("valor")
-                                nuevos_items.append({
-                                    "id_temporal": str(uuid.uuid4()),
-                                    "plataforma": item_seleccionado["plataforma"],
-                                    "fuente": item_seleccionado["fuente"],
-                                    "imagenes": item_seleccionado["imagenes"],
-                                    "enlace": enlace_auto
-                                    or item_seleccionado.get("enlace", ""),
-                                    "enlace_confianza": (
-                                        post_normalizado.get("enlace") or {}
-                                    ).get("confianza", "no_detectado"),
-                                    "estado": "extraido",
-                                    "datos_extraidos": post_normalizado,
-                                })
-
-                            if error_msg:
-                                lote_actual = list(
-                                    st.session_state["lote_ingreso"]
-                                )
-                                for item in lote_actual:
-                                    if (
-                                        item["id_temporal"]
-                                        == item_seleccionado["id_temporal"]
-                                    ):
-                                        item["estado"] = "error"
-                                        item["error_msg"] = error_msg
-                                        break
-                                st.session_state["lote_ingreso"] = lote_actual
-                                st.error(f"❌ {error_msg}")
-                            else:
-                                lote_actual = list(
-                                    st.session_state["lote_ingreso"]
-                                )
-                                nuevos = [
-                                    item
-                                    for item in lote_actual
-                                    if item["id_temporal"]
-                                    != item_seleccionado["id_temporal"]
-                                ]
-                                nuevos.extend(nuevos_items)
-                                st.session_state["lote_ingreso"] = nuevos
-                                st.success(
-                                    f"✅ {len(nuevos_items)} post(s) importado(s) "
-                                    "desde JSON."
-                                )
-                                st.rerun()
-
     # ── Paso 2: Tarjetas editables ──
     if extraidos:
         st.markdown("### ✏️ Revisión y corrección")
@@ -573,6 +453,122 @@ def _confirmar_post(item: dict, texto_key: str, fecha_key: str, df_comentarios: 
     item["estado"] = "revisado"
     st.success("✅ Post confirmado.")
     st.rerun()
+
+
+def seccion_importar_json():
+    """Sección independiente para importar JSON ya extraído externamente.
+
+    No depende de haber subido antes ninguna imagen/PDF: el operador elige
+    plataforma y fuente aquí mismo, sube el JSON, y los posts entran
+    directamente al lote en estado 'extraido', listos para revisión (Paso 2).
+    """
+    st.markdown("""
+    <div class="seccion-header">
+        <div class="seccion-titulo">📥 Importar JSON extraído externamente</div>
+        <div class="seccion-subtitulo">
+            Si ya tienes el JSON generado por otro modelo (Gemini, ChatGPT, etc.), súbelo aquí directamente
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_plat, col_fuente = st.columns(2)
+    with col_plat:
+        plataforma_post = st.radio(
+            "Plataforma",
+            ["Facebook", "TikTok", "Externos"],
+            horizontal=True,
+            key="json_plataforma",
+        )
+
+    fuente = None
+    with col_fuente:
+        if plataforma_post == "Facebook":
+            fuente = st.selectbox("Fuente (página oficial)", FB_PAGES_OFICIALES, key="json_fuente_fb")
+        elif plataforma_post == "TikTok":
+            tk_nombres = list(TK_ACCOUNTS.values())
+            tk_label = st.selectbox("Fuente (cuenta oficial)", tk_nombres, key="json_fuente_tk")
+            tk_id_map = {v: k for k, v in TK_ACCOUNTS.items()}
+            fuente = str(tk_id_map[tk_label])
+        else:  # Externos
+            paginas = listar_paginas_externas(EXTERNOS_DB)
+            opciones = ["➕ Agregar nueva página…"] + list(paginas)
+            seleccion = st.selectbox(
+                "Fuente (página externa)",
+                opciones,
+                key="json_fuente_ext",
+            )
+            if seleccion == "➕ Agregar nueva página…":
+                fuente = st.text_input(
+                    "Nombre de la nueva página externa",
+                    key="json_fuente_ext_nueva",
+                ).strip()
+            else:
+                fuente = seleccion
+
+    archivo_json = st.file_uploader(
+        "Sube el JSON ya extraído",
+        type=["json"],
+        key="json_import_uploader",
+    )
+
+    if st.button("📥 Aplicar JSON importado", key="btn_importar_json_standalone"):
+        if not archivo_json:
+            st.error("Sube un archivo JSON primero.")
+        elif not fuente:
+            st.error("Selecciona o escribe una fuente primero.")
+        else:
+            import json as _json
+            from ingreso_extraccion import _aplicar_contrato
+
+            try:
+                contenido = archivo_json.read().decode("utf-8")
+                datos_json = _json.loads(contenido)
+            except (UnicodeDecodeError, _json.JSONDecodeError) as e:
+                st.error(f"El archivo no es un JSON válido: {e}")
+            else:
+                if (
+                    not isinstance(datos_json, dict)
+                    or "posts" not in datos_json
+                    or not isinstance(datos_json["posts"], list)
+                ):
+                    st.error('El JSON debe tener la forma {"posts": [...]}.')
+                elif not datos_json["posts"]:
+                    st.error("El JSON no contiene posts.")
+                else:
+                    plat_extraccion = "facebook" if plataforma_post.lower() == "externos" else plataforma_post.lower()
+                    nuevos_items = []
+                    error_msg = None
+
+                    for i, post_crudo in enumerate(datos_json["posts"]):
+                        try:
+                            post_normalizado = _aplicar_contrato(post_crudo, plat_extraccion)
+                        except Exception as e:
+                            error_msg = f"Error al procesar post {i+1} del JSON: {e}"
+                            break
+
+                        enlace_auto = (post_normalizado.get("enlace") or {}).get("valor")
+                        nuevos_items.append({
+                            "id_temporal": str(uuid.uuid4()),
+                            "plataforma": plataforma_post.lower(),
+                            "fuente": fuente,
+                            "imagenes": [],
+                            "enlace": enlace_auto or "",
+                            "enlace_confianza": (post_normalizado.get("enlace") or {}).get("confianza", "no_detectado"),
+                            "estado": "extraido",
+                            "datos_extraidos": post_normalizado,
+                        })
+
+                    if error_msg:
+                        st.error(f"❌ {error_msg}")
+                    else:
+                        if plataforma_post == "Externos":
+                            try:
+                                agregar_pagina_externa(fuente, EXTERNOS_DB)
+                            except Exception:
+                                pass
+                        st.session_state["lote_ingreso"].extend(nuevos_items)
+                        st.success(f"✅ {len(nuevos_items)} post(s) importado(s) desde JSON.")
+                        st.rerun()
 
 
 def seccion_cargar_contenido():

@@ -1,0 +1,140 @@
+{
+  "posts": [
+    {
+      "texto_post": "El tiempo complementario visto en las pantallas instaladas en el parque Libertad. 😪🇦🇷🇪🇸 #SantaAnaCentro",
+      "fecha": {"valor": "Ayer a las 3:30 p.m.", "confianza": "seguro"},
+      "autor_pagina": "Gustavo Acevedo",
+      "enlace": {"valor": "https://www.facebook.com/share/p/1BZRwPjHW1/", "confianza": "seguro"},
+      "reacciones": {
+        "likes": {"valor": 213, "confianza": "seguro"},
+        "loves": {"valor": 15, "confianza": "seguro"},
+        "cares": {"valor": 0, "confianza": "dudoso"},
+        "hahas": {"valor": 52, "confianza": "seguro"},
+        "sads": {"valor": 0, "confianza": "dudoso"},
+        "wows": {"valor": 1, "confianza": "seguro"},
+        "angrys": {"valor": 3, "confianza": "seguro"},
+        "total": {"valor": 284, "confianza": "seguro"}
+      },
+      "comentarios_count": {"valor": 27, "confianza": "seguro"},
+      "comentarios": [
+        {
+          "texto": "España ganará",
+          "autor": "Ana Monterroza",
+          "emocion": "Euforia",
+          "intensidad": "intensa",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Ggoooolllll de España a",
+          "autor": "Verito Gamero",
+          "emocion": "Euforia",
+          "intensidad": "intensa",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "España gana",
+          "autor": "Loli Castillo",
+          "emocion": "Confianza",
+          "intensidad": "media",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Jose Miguel Martinez ahí hubiéramos ido",
+          "autor": "Gabi Martz",
+          "emocion": "Alegría",
+          "intensidad": "media",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Gabi Martz y sin gastar haha",
+          "autor": "Jose Miguel Martinez",
+          "emocion": "Alegría",
+          "intensidad": "media",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "España ganará ufff",
+          "autor": "Any Rodríguez",
+          "emocion": null,
+          "intensidad": null,
+          "postura": null,
+          "confianza_emocion": "no_detectado",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "España 1 FIFA 0",
+          "autor": "Juan El Bautista",
+          "emocion": null,
+          "intensidad": null,
+          "postura": null,
+          "confianza_emocion": "no_detectado",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "OLEEEE",
+          "autor": "Karen Flores",
+          "emocion": "Expectativa",
+          "intensidad": "media",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Lo mejor de lo mejor",
+          "autor": "Ede Gonzaleth",
+          "emocion": "Satisfacción",
+          "intensidad": null,
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "",
+          "autor": "Eduardo Cruz",
+          "emocion": null,
+          "intensidad": null,
+          "postura": null,
+          "confianza_emocion": "no_detectado",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "",
+          "autor": "Mary Puerto",
+          "emocion": "Confianza",
+          "intensidad": "media",
+          "postura": "apoyo",
+          "confianza_emocion": "dudoso",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Que sacrificio. Si canal 4 lo pasa gratis ..",
+          "autor": "Osito Sam",
+          "emocion": null,
+          "intensidad": null,
+          "postura": null,
+          "confianza_emocion": "no_detectado",
+          "tema_sugerido": null
+        },
+        {
+          "texto": "Gana España lo bueno q igual gana barcelona",
+          "autor": "Xenia Niño",
+          "emocion": null,
+          "intensidad": null,
+          "postura": null,
+          "confianza_emocion": "no_detectado",
+          "tema_sugerido": null
+        }
+      ]
+    }
+  ]
+}
