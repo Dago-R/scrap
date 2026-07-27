@@ -632,12 +632,22 @@ def aggregate_emotions(texts: list[str], es_oficial: bool = False) -> dict:
 
     total = len(texts)
     all_keys = list(conteo.keys())
-    pct = {
-        e: round(conteo.get(e, 0) / total * 100, 1)
-        for e in all_keys
-    }
+    # pct solo incluye claves canónicas; las propuestas se cuentan en familias
+    # pero no se exponen como porcentajes propios (violarían el esquema).
+    canonical_total = sum(conteo.get(e, 0) for e in EMOCIONES_VALIDAS)
+    if canonical_total > 0:
+        pct = {
+            e: round(conteo.get(e, 0) / canonical_total * 100, 1)
+            for e in EMOCIONES_VALIDAS
+        }
+    else:
+        pct = {e: 0.0 for e in EMOCIONES_VALIDAS}
 
-    dominante = max(all_keys, key=lambda e: (conteo.get(e, 0), e))
+    canonical_keys = [k for k in all_keys if k in EMOCIONES_VALIDAS]
+    if canonical_keys:
+        dominante = max(canonical_keys, key=lambda e: (conteo.get(e, 0), e))
+    else:
+        dominante = "calma"
     if conteo.get(dominante, 0) == 0:
         dominante = "calma"
 

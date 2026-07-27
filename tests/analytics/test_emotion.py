@@ -474,3 +474,44 @@ def test_no_palabras_duplicadas_en_lexico():
             word_to_cats[w].append(cat)
     duplicates = {w: cats for w, cats in word_to_cats.items() if len(cats) > 1}
     assert not duplicates, f"Palabras duplicadas: {duplicates}"
+
+
+# ── Regresión: Bug 1 y 2 — dominante y pct con claves propuesta ──
+
+def test_aggregate_emotions_dominante_siempre_canonico():
+    """Regresión: dominante nunca debe ser una clave propuesta *_nueva_*."""
+    from dashboard.tema_taxonomia import EMOCIONES_VALIDAS
+    # Textos sin match en léxico → classify_emotion produce claves propuesta
+    texts = [
+        "Buena alcaldía",          # → civica_nueva_buena
+        "Necesitamos más escuelas", # → civica_nueva_necesitamos
+        "Malos los servicios",     # → civica_nueva_malos
+        "Peligroso el centro",     # → fear_nueva_peligroso
+    ]
+    agg = aggregate_emotions(texts)
+    assert agg["dominante"] in EMOCIONES_VALIDAS, (
+        f"dominante '{agg['dominante']}' no es canónico. "
+        f"Las claves propuesta no deben ganar la selección de dominante."
+    )
+    assert "_nueva_" not in agg["dominante"]
+
+
+def test_aggregate_emotions_pct_solo_claves_canonicas():
+    """Regresión: pct no debe contener claves propuesta *_nueva_*."""
+    from dashboard.tema_taxonomia import EMOCIONES_VALIDAS
+    # Textos sin match en léxico → producen claves propuesta
+    texts = [
+        "Buena alcaldía",
+        "Necesitamos más escuelas",
+        "Malos los servicios",
+    ]
+    agg = aggregate_emotions(texts)
+    pct_keys = set(agg["pct"].keys())
+    proposal_keys = [k for k in pct_keys if "_nueva_" in k]
+    assert proposal_keys == [], (
+        f"pct contiene claves propuesta: {proposal_keys}. "
+        f"Solo deben existir claves de EMOCIONES_VALIDAS."
+    )
+    assert pct_keys == set(EMOCIONES_VALIDAS), (
+        f"pct debe tener exactamente las claves de EMOCIONES_VALIDAS."
+    )
