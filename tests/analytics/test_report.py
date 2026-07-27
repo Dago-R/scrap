@@ -295,3 +295,28 @@ def test_evidencia_por_emocion_sin_topic_results():
         f"evidencia_por_emocion should be populated without topic_results_by_text, "
         f"got {len(por_emocion)} keys: {list(por_emocion.keys())}"
     )
+
+
+# ── BUG 1 regression: SDI must not fire when nsi_previo is None ──
+
+def test_sdi_no_fires_when_nsi_previo_is_none():
+    """Primer informe sin histórico: nsi_previo=None → no debe generar SDI alert."""
+    aprobaciones = [
+        {
+            "id": 1, "categoria": "seguridad", "label": "Seguridad",
+            "pct": 60.0, "doc_count": 200,
+            "apoyo": 10, "critica": 180, "neutral": 10,
+            "pct_apoyo": 5.0, "pct_critica": 90.0, "pct_neutral": 5.0,
+            "saldo": -170, "ejemplo": "", "ejemplo_critica": "",
+            "emociones": {}, "emocion_dominante": "tristeza",
+        },
+    ]
+    data, resultado = generar_reporte_completo(
+        aprobaciones, "2026-04", "2026-04-30",
+        nsi_previo=None,
+    )
+    alertas = data.get("bloque3", {}).get("alertas_cambridge", [])
+    sdi_alerts = [a for a in alertas if a.get("tipo") == "SDI"]
+    assert sdi_alerts == [], (
+        f"SDI alert should not fire when nsi_previo=None, got {sdi_alerts}"
+    )

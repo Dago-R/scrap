@@ -268,7 +268,7 @@ class TestVolFactor:
 
 
 class TestRiskReputacional:
-    """§E literal: RR = clamp((max_topic_controversy * 10 * 0.50 + nsi_deviation * 0.50) * vol_factor, 0, 1)"""
+    """§E literal: RR = clamp((max_topic_controversy * 0.50 + nsi_deviation * 0.50) * vol_factor, 0, 1)"""
 
     def test_bajo(self):
         """max_tc=0.05, nsi=40(dev=0.1), vf=1.0

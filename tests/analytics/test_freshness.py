@@ -67,3 +67,15 @@ def test_un_dia_despues_del_limite(tmp_path):
     f.write_text(json.dumps({"meta": {"generado_en": hace_8}}))
     r = verificar_freshness(str(f), max_dias=7)
     assert r["fresco"] is False
+
+
+# ── BUG 2 regression: datetime naive must not crash ──
+
+def test_fecha_naive_no_crasha(tmp_path):
+    """datetime naive (sin timezone) → fresco=False, no lanza TypeError."""
+    f = tmp_path / "analysis.json"
+    naive_dt = datetime(2026, 4, 15, 12, 0, 0)  # naive, sin tzinfo
+    f.write_text(json.dumps({"meta": {"generado_en": naive_dt.isoformat()}}))
+    r = verificar_freshness(str(f))
+    assert r["fresco"] is False
+    assert "invalido" in r["mensaje"]

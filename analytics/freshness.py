@@ -67,7 +67,7 @@ def verificar_freshness(path="data/analysis.json", max_dias=7):
             "fecha_generacion": generado_en,
             "mensaje": msg,
         }
-    except ValueError:
+    except (ValueError, TypeError):
         return {
             "fresco": False,
             "dias_desde_generacion": None,

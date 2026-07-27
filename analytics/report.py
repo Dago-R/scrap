@@ -726,8 +726,10 @@ def construir_analysis(aprobaciones_agrupadas: list,
 
     nsi_actual = net_sentiment_index(total_apoyo, total_critica,
                                       max(n_total_aprobaciones, n_total))
-    nsi_prev = n(nsi_previo) if nsi_previo is not None else 0.0
-    alerta_sdi = detectar_sdi(nsi_actual, nsi_prev)
+    alerta_sdi = None
+    if nsi_previo is not None:
+        nsi_prev = n(nsi_previo)
+        alerta_sdi = detectar_sdi(nsi_actual, nsi_prev)
     if alerta_sdi:
         if verificar_cooldown(cooldown.get("SDI"), ahora, "SDI"):
             # enlaces_referencia: posts más controversiales del período
