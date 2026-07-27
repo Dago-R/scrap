@@ -132,7 +132,23 @@ def construir_analysis(aprobaciones_agrupadas: list,
         else:
             tono_dominante = "neutral"
 
+    # Tendencia: score del mes anterior desde fb_monthly_sentiment
     tono_score_ayer = 0.0
+    if fb_monthly_sentiment and periodo:
+        def _periodo_anterior(periodo_str: str) -> str:
+            y, m = map(int, periodo_str.split("-"))
+            m -= 1
+            if m == 0:
+                m, y = 12, y - 1
+            return f"{y:04d}-{m:02d}"
+        periodo_prev = _periodo_anterior(periodo)
+        prev_row = next((r for r in fb_monthly_sentiment if r[0] == periodo_prev), None)
+        if prev_row is not None:
+            avg_score_prev = float(prev_row[1])
+            if abs(avg_score_prev) <= 1.0:
+                tono_score_ayer = round(avg_score_prev * 100, 1)
+            else:
+                tono_score_ayer = round(avg_score_prev, 1)
     tendencia = round(tono_score_hoy - tono_score_ayer, 2)
     if tendencia > 1.0:
         etiqueta_tendencia = "mejorando"
@@ -348,9 +364,11 @@ def construir_analysis(aprobaciones_agrupadas: list,
             fb_stats.get("angrys", 0),
         )
 
-    total_reac_fb = reac_pos_fb + reac_neg_fb
+    reac_wow_fb = n(fb_stats.get("wows", 0)) if fb_stats else 0
+    total_reac_fb = reac_pos_fb + reac_neg_fb + reac_wow_fb  # wows como neutros
     reac_pos_pct = round(reac_pos_fb / total_reac_fb * 100, 1) if total_reac_fb > 0 else 0.0
     reac_neg_pct = round(reac_neg_fb / total_reac_fb * 100, 1) if total_reac_fb > 0 else 0.0
+    reac_wow_pct = round(reac_wow_fb / total_reac_fb * 100, 1) if total_reac_fb > 0 else 0.0
 
     # ── §H: Pulso IQ ──
     promedio_so_fb = 0.0
@@ -396,20 +414,55 @@ def construir_analysis(aprobaciones_agrupadas: list,
             promedios_mensuales=promedios_mensuales_fb,
         )
     if tk_stats:
+        # Calcular n_videos_con_tema desde aprobaciones_agrupadas (plataforma tiktok)
+        n_videos_con_tema_tk = sum(
+            1 for t in aprobaciones_agrupadas
+            if t.get("plataforma") == "tiktok" and t.get("doc_count", 0) > 0
+        )
+        n_videos_con_zona_tk = 0
+
+        total_reac_tk = (
+            n(tk_stats.get("likes", 0))
+            + n(tk_stats.get("shares", 0))
+            + n(tk_stats.get("favorites", 0))
+        )
+
         dims_tk = calcular_pulso_iq_tk(
             promedio_sentiment_order=0.0,
             interacciones=n(tk_stats.get("likes", 0)) + n(tk_stats.get("shares", 0))
                          + n(tk_stats.get("favorites", 0)) + n(tk_stats.get("comments", 0)),
             vistas=tk_stats.get("views", 0),
             angrys=0, sads=0, hahas=0,
-            total_reacciones=n(tk_stats.get("likes", 0)),
-            n_videos_con_tema=0,
+            total_reacciones=total_reac_tk,
+            n_videos_con_tema=n_videos_con_tema_tk,
             n_videos_total=tk_stats.get("videos", 0),
-            n_videos_con_zona=0,
+            n_videos_con_zona=n_videos_con_zona_tk,
             total_comentarios=tk_stats.get("comments", 0),
         )
     iq_score, iq_dims = pulso_iq_score(dims_fb, dims_tk)
     iq_cuadrante = pulso_iq_cuadrante(iq_score, iq_dims)
+
+    # Calcular vol_hoy y promedio_semanal desde daily_volumes
+    daily_vols_all = []
+    if fb_stats and fb_stats.get("daily_volumes"):
+        daily_vols_all.extend(v for _, v in fb_stats["daily_volumes"])
+    if tk_stats and tk_stats.get("daily_volumes"):
+        daily_vols_all.extend(v for _, v in tk_stats["daily_volumes"])
+
+    if daily_vols_all:
+        vol_hoy_intensidad = daily_vols_all[-1] if daily_vols_all else total_aprobados
+        ultimos_7 = daily_vols_all[-7:] if len(daily_vols_all) >= 7 else daily_vols_all
+        promedio_semanal_intensidad = round(sum(ultimos_7) / len(ultimos_7), 1) if ultimos_7 else total_aprobados
+        if promedio_semanal_intensidad > 0:
+            pct_dif_intensidad = round(
+                (vol_hoy_intensidad - promedio_semanal_intensidad) / promedio_semanal_intensidad * 100, 1
+            )
+        else:
+            pct_dif_intensidad = 0.0
+    else:
+        vol_hoy_intensidad = total_aprobados
+        promedio_semanal_intensidad = total_aprobados
+        pct_dif_intensidad = 0.0
 
     bloque1 = {
         "clima_narrativo": {
@@ -424,13 +477,18 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "etiqueta_tendencia": etiqueta_tendencia,
             "narrativa": "",
             "enlaces_referencia": [],
-            "formula_usada": "NSI = (positivos - negativos) / total * 100",
+            "formula_usada": (
+                "pct_favorable/pct_critico: classify_sentiment() léxico sobre todos los comentarios. "
+                "nsi_actual: net_sentiment_index(apoyo, critica, total_con_tema) "
+                "donde apoyo/critica vienen de derivar_postura() por emoción. "
+                "Son métricas complementarias, no intercambiables."
+            ),
         },
         "indice_emociones": indice_emociones,
         "intensidad": {
-            "vol_hoy": total_aprobados,
-            "promedio_semanal": total_aprobados,
-            "pct_diferencia": 0.0,
+            "vol_hoy": vol_hoy_intensidad,
+            "promedio_semanal": promedio_semanal_intensidad,
+            "pct_diferencia": pct_dif_intensidad,
             "narrativa": "",
             "enlaces_referencia": [],
         },
@@ -473,6 +531,8 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "reacciones_negativas": reac_neg_fb,
             "reacciones_positivas_pct": reac_pos_pct,
             "reacciones_negativas_pct": reac_neg_pct,
+            "reacciones_neutras_pct": reac_wow_pct,
+            "total_reacciones_base": total_reac_fb,
             "ratio_amor_enojo": ratio_amor_fb,
             "ratio_amor_enojo_formula": "R = (likes + loves + cares) / (angrys + sads + hahas)",
             "net_sentiment_reacciones": ns_reac,
@@ -660,7 +720,12 @@ def construir_analysis(aprobaciones_agrupadas: list,
                     alertas.append(alerta_ici)
                     alertas_links.extend(alerta_ici.get("enlaces_referencia", []))
 
-    nsi_actual = net_sentiment_index(total_apoyo, total_critica, n_total)
+    # NSI usa SOLO los comentarios clasificados con tema (misma población que apoyo/critica)
+    total_neutral_aprobaciones = sum(t.get("neutral", 0) for t in aprobaciones_agrupadas)
+    n_total_aprobaciones = total_apoyo + total_critica + total_neutral_aprobaciones
+
+    nsi_actual = net_sentiment_index(total_apoyo, total_critica,
+                                      max(n_total_aprobaciones, n_total))
     nsi_prev = n(nsi_previo) if nsi_previo is not None else 0.0
     alerta_sdi = detectar_sdi(nsi_actual, nsi_prev)
     if alerta_sdi:
@@ -792,6 +857,31 @@ def construir_analysis(aprobaciones_agrupadas: list,
     else:
         semaforo = "verde"
 
+    # Calcular velocidad de propagación desde daily_volumes
+    tendencia_dias_vp = []
+    proyeccion_24h_vp = ""
+    temas_acelerando_vp = []
+    temas_desacelerando_vp = []
+
+    daily_combined = []
+    if fb_stats and fb_stats.get("daily_volumes"):
+        daily_combined = list(fb_stats["daily_volumes"])
+    if tk_stats and tk_stats.get("daily_volumes"):
+        tk_dict = dict(tk_stats["daily_volumes"])
+        fb_dict = dict(daily_combined)
+        all_dates = sorted(set(list(fb_dict.keys()) + list(tk_dict.keys())))
+        daily_combined = [(d, fb_dict.get(d, 0) + tk_dict.get(d, 0)) for d in all_dates]
+
+    if len(daily_combined) >= 2:
+        ultimos = daily_combined[-7:] if len(daily_combined) >= 7 else daily_combined
+        tendencia_dias_vp = [{"fecha": d, "vol": v} for d, v in ultimos]
+        ultimos_3 = [v for _, v in daily_combined[-3:]]
+        prom_3d = sum(ultimos_3) / len(ultimos_3) if ultimos_3 else 0
+        vol_hoy_vp = daily_combined[-1][1]
+        delta_pct = round((vol_hoy_vp - prom_3d) / prom_3d * 100, 1) if prom_3d > 0 else 0.0
+        tendencia_str = "al alza" if delta_pct > 10 else ("a la baja" if delta_pct < -10 else "estable")
+        proyeccion_24h_vp = f"Volumen estimado {tendencia_str} ({delta_pct:+.1f}% vs promedio 3d)"
+
     bloque3 = {
         "puntos_friccion": fricciones,
         "autenticidad": {
@@ -800,16 +890,21 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "n_duplicados": 0,
             "narrativa": "",
             "enlaces_referencia": [],
-            "formula_usada": "% coordinado = n_mensajes_duplicados_o_similares / total_comentarios * 100",
+            "formula_usada": (
+                "% coordinado = clamp((CV_volumen_diario - 0.5) / 0.5, 0, 1) * 100; "
+                "CV = desviacion_estandar(posts_por_dia) / media(posts_por_dia). "
+                "CV alto → patrón inorgánico (publicación concentrada). "
+                "Fuente: daily_volumes de FB y TK."
+            ),
         },
         "velocidad_propagacion": {
-            "proyeccion_24h": "",
-            "tendencia_dias": [],
+            "proyeccion_24h": proyeccion_24h_vp,
+            "tendencia_dias": tendencia_dias_vp,
+            "temas_acelerando": temas_acelerando_vp,
+            "temas_desacelerando": temas_desacelerando_vp,
             "narrativa": "",
             "enlaces_referencia": [],
-            "temas_acelerando": [],
-            "temas_desacelerando": [],
-            "formula_usada": "Velocidad = Δcomentarios / Δtiempo; proyección = tendencia_lineal últimas 72h",
+            "formula_usada": "Velocidad = Δvol_posts / Δt (días); proyección = tendencia últimos 3 días",
         },
         "nivel_alerta": {
             "semaforo": semaforo,

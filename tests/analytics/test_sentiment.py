@@ -213,3 +213,17 @@ def test_mezcla_neutral_con_sentimiento():
     assert r.label in ("neutral", "negativo", "positivo")
     assert r.counts["positivo"] >= 1
     assert r.counts["negativo"] >= 1
+
+
+def test_sin_invierte_negativo():
+    r1 = classify_sentiment("sin esperanza de cambio")
+    assert r1.label in ("negativo", "muy_negativo")
+    r2 = classify_sentiment("sin optimismo")
+    assert r2.label in ("negativo", "muy_negativo")
+
+
+def test_basura_es_negativo():
+    r1 = classify_sentiment("este gobierno es una basura")
+    assert r1.label in ("negativo", "muy_negativo")
+    r2 = classify_sentiment("pura basura")
+    assert r2.label in ("negativo", "muy_negativo")

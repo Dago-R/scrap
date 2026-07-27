@@ -115,12 +115,14 @@ NEGATIVE_WORDS: set[str] = {
     "demora", "demorado", "demorada", "tardado", "tardada", "lento",
     "lenta", "lentitud", "atraso", "atrasado", "atrasada",
     "espera", "esperar", "colarse", "fila",
+    # Crítica informal salvadoreña
+    "basura",
 }
 
 
 # ── Negación ──
 
-NEGATION_WORDS: set[str] = {"no", "nunca", "jamas", "tampoco", "ni"}
+NEGATION_WORDS: set[str] = {"no", "nunca", "jamas", "tampoco", "ni", "sin"}
 NEGATION_WINDOW = 3
 
 

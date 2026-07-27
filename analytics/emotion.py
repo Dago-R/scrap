@@ -119,7 +119,7 @@ EMOTION_LEXICON: dict[str, set[str]] = {
     "alegria": {
         "alegre", "alegria", "feliz", "contento", "contenta", "gozo",
         "encantado", "encantada", "disfruto", "gustoso", "gustosa",
-        "satisfecho", "satisfecha", "bienestar", "regocijo",
+        "bienestar", "regocijo",
         "sonrisa", "divertido", "divertida",
         # Patch 13.1 — expresiones de celebracion
         "que alegria", "que bonito", "que lindo", "que bien", "muy bien",
@@ -129,13 +129,13 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "disfrutando", "disfrutamos", "gozando", "gozamos", "animo",
         "fuerza", "adelante", "que noche", "que partido", "que tarde",
         "lograron", "lo lograron", "gran partido", "gran noche",
-        "bien jugado", "bien hecho",
+        "bien jugado",
         # Excluido del patch original: "vamos" (uso neutro muy frecuente en ES salvadoreño)
     },
     "euforia": {
-        "euforico", "euforia", "increible", "emocionado", "emocionada",
+        "euforico", "euforia", "emocionado", "emocionada",
         "espectacular", "brutal", "brutalisimo", "desbordado", "desbordada",
-        "extremo", "extrema", "gloria", "triple", "wow", "wao",
+        "extremo", "extrema", "gloria", "triple",
         "genialisimo", "fantastico",
         # Patch 13.1 — contenido deportivo/festivo
         "gol", "goles", "golazo", "goool", "gooool", "goooool", "gooooool",
@@ -154,7 +154,7 @@ EMOTION_LEXICON: dict[str, set[str]] = {
     # ── CONFIANZA (trust) ──
     "aceptacion": {
         "acepto", "de acuerdo", "bien", "correcto", "esta bien",
-        "se acepta", "conforme", "aprobado", "valido",
+        "se acepta", "aprobado", "valido",
     },
     "confianza": {
         "confio", "confianza", "respaldo", "seguro", "segura",
@@ -162,8 +162,8 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "creo en", "deposito", "fe",
     },
     "admiracion": {
-        "admiro", "admiracion", "bravo", "bravísimo", "excelente",
-        "brillante", "extraordinario", "extraordinaria", "heroico",
+        "admiro", "admiracion", "bravo", "bravísimo",
+        "brillante", "heroico",
         "heroica", "ejemplar", "inigualable", "elogio", "magnifico",
         "magnifica", "notable", "sobresaliente",
     },
@@ -178,23 +178,23 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "emergencia", "alarmado", "alarmada", "preocupacion",
     },
     "terror": {
-        "miedo", "panico", "terror", "aterrador", "aterradora",
-        "horror", "horrible", "pavor", "espanto", "desesperacion",
+        "miedo", "terror", "aterrador", "aterradora",
+        "horror", "horrible", "espanto", "desesperacion",
         "socorro", "auxilio", "grito", "asustado", "asustada",
     },
     # ── SORPRESA (surprise) ──
     "distraccion": {
-        "oh", "ah", "mira", "curioso", "curiosa", "interesante",
-        "llamativo", "llamativa", "raro", "rara",
+        "oh", "ah", "mira", "llamativo", "llamativa", "raro", "rara",
     },
     "sorpresa": {
         "sorprendido", "sorprendida", "increible", "no esperaba",
         "inesperado", "inesperada", "sorpresa", "imprevisto",
-        "imprevista", "vaya", "uy", "wow", "no puedo creer",
+        "imprevista", "vaya", "uy", "wow",
     },
     "asombro": {
-        "asombroso", "asombrosa", "impresionante", "extraordinario",
-        "extraordinaria", "estupendo", "estupenda", "alucinante",
+        "asombroso", "asombrosa", "impresionante",
+        "extraordinario", "extraordinaria",
+        "estupendo", "estupenda", "alucinante",
         "alucinado", "alucinada", "deslumbrante", "deslumbrado",
     },
     # ── TRISTEZA (sadness) ──
@@ -214,13 +214,13 @@ EMOTION_LEXICON: dict[str, set[str]] = {
     },
     # ── DESAGRADO / ASCO (disgust) ──
     "aburrimiento": {
-        "aburrido", "aburrida", "sin gracia", "me da igual",
+        "aburrido", "aburrida", "sin gracia",
         "pereza", "tedio", "monotonia", "insulso", "insulsa",
         "sin novedad", "comun", "mediocre",
     },
     "desagrado": {
         "desagrado", "desagradable", "feo", "fea", "no me gusta",
-        "disgusto", "antipatico", "antipatica", "fastidioso", "fastidiosa",
+        "disgusto", "antipatico", "antipatica",
     },
     "repulsion": {
         "asco", "repulsion", "repugnante", "repugna",
@@ -239,23 +239,23 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "molestia fuerte", "cabreo",
     },
     "furia": {
-        "furia", "ira", "odio", "odioso", "odiosa", "amenaza",
+        "furia", "odio", "odioso", "odiosa",
         "amenazar", "destruir", "venganza", "castigo", "insulto",
         "insultar", "basura", "maldito", "maldita", "carajo",
         "puta", "hijo de",
     },
     # ── ANTICIPACIÓN (anticipation) ──
     "interes": {
-        "curioso", "curiosa", "me interesa", "interesante",
+        "curioso", "curiosa", "me interesa",
         "pregunta", "consultar", "saber mas", "informacion",
     },
     "expectativa": {
-        "espero que", "a ver si", "pendiente", "seguimiento",
+        "espero que", "a ver si", "pendiente",
         "proximo", "proxima", "cuando", "toca", "va a salir",
         "estreno", "lanzamiento",
     },
     "vigilancia": {
-        "vigilo", "atento a", "no me pierdo", "seguir", "seguimiento",
+        "atento a", "no me pierdo", "seguir", "seguimiento",
         "monitoreo", "control", "supervision", "observar",
     },
     # ── DÍADAS ──
@@ -265,7 +265,7 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "se puede", "todo sale bien",
     },
     "amor_civico": {
-        "amor", "cariño", "cariño", "aprecio", "comunidad",
+        "amor", "cariño", "cariño", "comunidad",
         "hermanos", "hermandad", "patria", "tierra", "queremos",
         "unidos", "solidaridad", "fraternidad",
         # Patch 13.1 — amor local/territorial
@@ -285,23 +285,23 @@ EMOTION_LEXICON: dict[str, set[str]] = {
     "asombro_temeroso": {
         "sobrecogido", "sobrecogida", "horrorizado", "horrorizada",
         "impactado", "impactada", "aterrorizado", "aterrorizada",
-        "conmocion", "miedo y sorpresa",
+        "miedo y sorpresa",
     },
     "desaprobacion": {
-        "decepcionado", "decepcionada", "no puedo creer",
+        "decepcionado", "decepcionada",
         "decepcion", "decepcionante", "lamentable",
         "lamentablemente", "infelizmente",
     },
     "remordimiento": {
-        "lamento", "me arrepiento", "perdon", "disculpa",
-        "fue un error", "me equivoque", "culpa", "remordimiento",
+        "lamento", "perdon", "disculpa",
+        "fue un error", "me equivoque", "remordimiento",
     },
     "desprecio": {
-        "desprecio", "menosprecio", "basura", "inutil", "inservible",
+        "desprecio", "menosprecio", "inutil", "inservible",
         "no vale", "nada sirve", "humillacion", "humillar",
     },
     "agresividad": {
-        "amenaza", "confrontacion", "voy a", "te voy a",
+        "confrontacion", "voy a", "te voy a",
         "vas a ver", "cuidado que", "te tengo", "revancha",
         "represalia", "venganza activa",
     },
@@ -326,7 +326,7 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "para informar", " dato ", "referencia", "solo preguntar",
     },
     "reconocimiento": {
-        "agradezco", "gracias", "felicito", "bravo", "buen trabajo",
+        "agradezco", "gracias", "felicito", "buen trabajo",
         "reconocimiento", "aprecio", "bendiciones", "excelente",
         "gracias por", "mi agradecimiento",
         # Patch 13.1 — agradecimiento especifico
@@ -345,9 +345,9 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "felicitaciones a la alcaldia",
     },
     "ironia": {
-        "claro que si", "que bueno", "bravo pero", "seguro que",
+        "claro que si", "bravo pero", "seguro que",
         "ya veremos", "sarcastico", "burla", "ironia",
-        "que bonito", "ay que bueno",
+        "ay que bueno",
     },
     # ── Nuevas primarias (split de slash labels) ──
     "panico": {
@@ -356,7 +356,7 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "se viene todo abajo",
     },
     "pena_profunda": {
-        "luto", "conmocion", "duelo", "communidad de dolor",
+        "conmocion", "duelo", "communidad de dolor",
         "lloramos juntos", "tragedia colectiva", "pueblo llora",
         "nos duele", "dolor colectivo",
     },
@@ -395,19 +395,19 @@ EMOTION_LEXICON: dict[str, set[str]] = {
         "no deberia haber", "me arrepiento", "deberia haber hecho",
     },
     "curiosidad": {
-        "curiosidad", "curioso", "curiosa", "quiero saber",
+        "curiosidad", "quiero saber",
         "me gustaria saber", "alguien sabe", "algun dato",
-        "informacion", "que pasaria si",
+        "que pasaria si",
     },
     "esperanza": {
-        "esperanza", "espero", "confio en que", "ojala",
+        "espero", "confio en que", "ojala",
         "ojala que", "tengo fe", "se puede mejorar",
-        "mejorara", "habra cambio",
+        "habra cambio",
     },
     "indignacion": {
         "indignado", "indignada", "no es justo", "injusto",
         "injusta", "como es posible", "no puede ser",
-        "escandalo", "abuso",
+        "abuso",
     },
     "incredulidad": {
         "no puedo creer", "imposible", "de verdad",

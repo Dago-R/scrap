@@ -81,6 +81,7 @@ def cmd_generar(args):
         get_fb_anger_by_zone, get_fb_monthly_controversy,
         get_fb_monthly_theme_controversy,
         get_fb_monthly_er, get_tk_monthly_er,
+        get_fb_monthly_nsi, get_fb_period_controversy,
     )
 
     # Combinar aprobaciones de las 3 DBs (clasificación automática)
@@ -90,23 +91,28 @@ def cmd_generar(args):
             for a in aprobaciones:
                 a.setdefault("plataforma", "override")
     else:
-        aprobaciones = []
-        for label, (db_placeholder, tabla, col_id, col_texto) in PLATAFORMA_TABLAS.items():
-            db = {
-                "facebook": _cfg.FACEBOOK_DB,
-                "tiktok": _cfg.TIKTOK_DB,
-                "externos": _cfg.EXTERNOS_DB,
-            }[label]
-            try:
-                parcial = agregar_por_tema_automatico(db, tabla=tabla, col_id=col_id, col_texto=col_texto)
-                for a in parcial:
-                    a.setdefault("plataforma", label)
-                aprobaciones.extend(parcial)
-            except Exception:
-                pass
-        aprobaciones.sort(key=lambda x: -x.get("doc_count", 0))
-        for i, a in enumerate(aprobaciones):
-            a["id"] = i + 1
+        from analytics.queries import cargar_temas_aprobados, _fusionar_aprobaciones_por_categoria
+        try:
+            aprobaciones = cargar_temas_aprobados()
+        except Exception:
+            aprobaciones = []
+
+        if not aprobaciones:
+            parciales = []
+            for label, (db_placeholder, tabla, col_id, col_texto) in PLATAFORMA_TABLAS.items():
+                db = {
+                    "facebook": _cfg.FACEBOOK_DB,
+                    "tiktok": _cfg.TIKTOK_DB,
+                    "externos": _cfg.EXTERNOS_DB,
+                }[label]
+                try:
+                    parcial = agregar_por_tema_automatico(db, tabla=tabla, col_id=col_id, col_texto=col_texto)
+                    for a in parcial:
+                        a.setdefault("plataforma", label)
+                    parciales.extend(parcial)
+                except Exception:
+                    pass
+            aprobaciones = _fusionar_aprobaciones_por_categoria(parciales)
 
     if not aprobaciones:
         print("No hay aprobaciones para generar el reporte.")
@@ -192,13 +198,35 @@ def cmd_generar(args):
     except Exception:
         pass
 
+    # §F SDI: Compute nsi_previo from previous month
+    nsi_previo = None
+    try:
+        periodo_prev_sdi = _periodo_anterior(args.periodo)
+        nsi_monthly = get_fb_monthly_nsi()
+        for mes, nsi_val in nsi_monthly:
+            if mes == periodo_prev_sdi:
+                nsi_previo = nsi_val
+                break
+    except Exception:
+        pass
+
     # §F EFI: Compute er_previo from previous month, same methodology as er_display
     er_previo = None
     try:
-        periodo_prev = _periodo_anterior(args.periodo)
+        periodo_prev_efi = _periodo_anterior(args.periodo)
         fb_monthly = get_fb_monthly_er()
         tk_monthly = get_tk_monthly_er()
-        er_previo = _calcular_er_previo(periodo_prev, fb_monthly, tk_monthly)
+        er_previo = _calcular_er_previo(periodo_prev_efi, fb_monthly, tk_monthly)
+    except Exception:
+        pass
+
+    # §F ICI: Compute fb_period_controversy for current 7-day window
+    fb_period_controversy = None
+    try:
+        from datetime import datetime, timedelta
+        fh = datetime.fromisoformat(args.fecha_hasta)
+        desde = (fh - timedelta(days=7)).strftime("%Y-%m-%d")
+        fb_period_controversy = get_fb_period_controversy(desde, args.fecha_hasta)
     except Exception:
         pass
 
@@ -210,6 +238,8 @@ def cmd_generar(args):
         tk_stats=tk_stats,
         externos_stats=externos_stats,
         er_previo=er_previo,
+        nsi_previo=nsi_previo,
+        fb_period_controversy=fb_period_controversy,
         fb_monthly_sentiment=fb_monthly_sentiment,
         fb_per_theme_controversy=fb_per_theme_controversy,
         fb_posts_with_sentiment=fb_posts_with_sentiment,

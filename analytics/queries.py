@@ -705,10 +705,11 @@ def get_fb_monthly_sentiment(db_path=None):
 
 
 def get_fb_monthly_er(db_path=None):
-    """ER mensual de FB: retorna lista de (mes, er, total_engagement, n_posts).
+    """ER mensual de FB con misma lógica que engagement_rate_fb().
 
-    ER = total_engagement / n_posts * 100, donde engagement incluye
-    reacciones + comments + shares.
+    Si el mes tiene vistas > 0 → ER = engagement / vistas * 100 (basis=views).
+    Si vistas == 0 → ER = engagement / n_posts * 100 (basis=per_post).
+    Retorna lista de (mes, er, total_engagement, n_posts).
     """
     db_path = db_path or _cfg.FACEBOOK_DB
     conn = _conn(db_path)
@@ -720,23 +721,64 @@ def get_fb_monthly_er(db_path=None):
             "  + COALESCE(cares_count,0) + COALESCE(hahas_count,0) "
             "  + COALESCE(wows_count,0) + COALESCE(sads_count,0) "
             "  + COALESCE(angrys_count,0) + COALESCE(comments_count,0) "
-            "  + COALESCE(shares_count,0)) as total_eng "
+            "  + COALESCE(shares_count,0)) as total_eng, "
+            "SUM(COALESCE(views_count,0)) as total_views "
             "FROM fb_posts GROUP BY mes ORDER BY mes"
         ).fetchall()
         result = []
         for r in rows:
-            er = round(r["total_eng"] / r["n_posts"] * 100, 2) if r["n_posts"] else 0
-            result.append((r["mes"], er, r["total_eng"], r["n_posts"]))
+            eng = r["total_eng"] or 0
+            n_posts = r["n_posts"] or 0
+            views = r["total_views"] or 0
+            if views > 0:
+                er = round(eng / views * 100, 2)
+            elif n_posts > 0:
+                er = round(eng / n_posts * 100, 2)
+            else:
+                er = 0.0
+            result.append((r["mes"], er, eng, n_posts))
+        return result
+    finally:
+        conn.close()
+
+
+def get_fb_monthly_nsi(db_path=None):
+    """NSI mensual de FB: retorna lista de (mes, nsi) calculado desde fb_comments.
+
+    NSI = (apoyo - critica) / total * 100, donde apoyo/critica se derivan
+    de sentiment_score: score > 0 → apoyo, score < 0 → critica.
+    Retorna lista de (mes_YYYY-MM, nsi_float) ordenada por mes.
+    """
+    db_path = db_path or _cfg.FACEBOOK_DB
+    conn = _conn(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT strftime('%Y-%m', created_time) as mes, "
+            "  SUM(CASE WHEN COALESCE(sentiment_score,0) > 0 THEN 1 ELSE 0 END) as apoyo, "
+            "  SUM(CASE WHEN COALESCE(sentiment_score,0) < 0 THEN 1 ELSE 0 END) as critica, "
+            "  COUNT(*) as total "
+            "FROM fb_comments "
+            "WHERE created_time IS NOT NULL "
+            "GROUP BY mes ORDER BY mes"
+        ).fetchall()
+        result = []
+        for r in rows:
+            total = r["total"] or 0
+            if total == 0:
+                continue
+            nsi = round((r["apoyo"] - r["critica"]) / total * 100, 1)
+            result.append((r["mes"], nsi))
         return result
     finally:
         conn.close()
 
 
 def get_tk_monthly_er(db_path=None):
-    """ER mensual de TikTok: retorna lista de (mes, er, total_engagement, n_videos).
+    """ER mensual de TikTok con misma lógica que engagement_rate_tk().
 
-    ER = total_engagement / n_videos * 100, donde engagement incluye
-    likes + comments + shares + favorites.
+    Si el mes tiene vistas > 0 → ER = engagement / vistas * 100 (basis=views).
+    Si vistas == 0 → ER = engagement / n_videos * 100 (basis=per_post).
+    Retorna lista de (mes, er, total_engagement, n_videos).
     """
     db_path = db_path or _cfg.TIKTOK_DB
     conn = _conn(db_path)
@@ -745,13 +787,22 @@ def get_tk_monthly_er(db_path=None):
             "SELECT strftime('%Y-%m', created_at) as mes, "
             "COUNT(*) as n_videos, "
             "SUM(COALESCE(likes,0) + COALESCE(comments_count,0) "
-            "  + COALESCE(shares,0) + COALESCE(favorites_count,0)) as total_eng "
+            "  + COALESCE(shares,0) + COALESCE(favorites_count,0)) as total_eng, "
+            "SUM(COALESCE(views,0)) as total_views "
             "FROM videos GROUP BY mes ORDER BY mes"
         ).fetchall()
         result = []
         for r in rows:
-            er = round(r["total_eng"] / r["n_videos"] * 100, 2) if r["n_videos"] else 0
-            result.append((r["mes"], er, r["total_eng"], r["n_videos"]))
+            eng = r["total_eng"] or 0
+            n_videos = r["n_videos"] or 0
+            views = r["total_views"] or 0
+            if views > 0:
+                er = round(eng / views * 100, 2)
+            elif n_videos > 0:
+                er = round(eng / n_videos * 100, 2)
+            else:
+                er = 0.0
+            result.append((r["mes"], er, eng, n_videos))
         return result
     finally:
         conn.close()
@@ -836,16 +887,17 @@ def get_fb_controversial_posts(db_path=None):
     conn = _conn(db_path)
     try:
         rows = conn.execute(
-            "SELECT "
-            "  post_id, post_url, page_name, created_time, "
-            "  COALESCE(NULLIF(topic_category,''), '') as topic_category, "
-            "  COALESCE(zona, '') as zona, "
-            "  (COALESCE(angrys_count,0) + COALESCE(sads_count,0) + COALESCE(hahas_count,0)) as negativos, "
-            "  (COALESCE(likes_count,0) + COALESCE(loves_count,0) + COALESCE(cares_count,0) "
-            "    + COALESCE(hahas_count,0) + COALESCE(wows_count,0) "
-            "    + COALESCE(sads_count,0) + COALESCE(angrys_count,0)) as total_reacciones "
-            "FROM fb_posts "
-            "HAVING total_reacciones > 0 "
+            "SELECT * FROM ("
+            "  SELECT "
+            "    post_id, post_url, page_name, created_time, "
+            "    COALESCE(NULLIF(topic_category,''), '') as topic_category, "
+            "    COALESCE(zona, '') as zona, "
+            "    (COALESCE(angrys_count,0) + COALESCE(sads_count,0) + COALESCE(hahas_count,0)) as negativos, "
+            "    (COALESCE(likes_count,0) + COALESCE(loves_count,0) + COALESCE(cares_count,0) "
+            "      + COALESCE(hahas_count,0) + COALESCE(wows_count,0) "
+            "      + COALESCE(sads_count,0) + COALESCE(angrys_count,0)) as total_reacciones "
+            "  FROM fb_posts"
+            ") WHERE total_reacciones > 0 "
             "ORDER BY CAST(negativos AS FLOAT) / total_reacciones DESC "
             "LIMIT 20"
         ).fetchall()
@@ -1061,7 +1113,8 @@ def get_tk_post_urls_by_cuenta(cuenta, limit=50, db_path=None):
 def get_fb_anger_by_zone(db_path=None):
     """§F — Ratio de enojo por zona para ZDI.
 
-    Retorna lista de dicts [{zona, negativos, total, pct_negativos}].
+    Retorna lista de dicts [{zona, negativos, total, total_reacciones, pct_negativos}].
+    pct_negativos = % de reacciones negativas sobre total de reacciones por zona.
     """
     db_path = db_path or _cfg.FACEBOOK_DB
     conn = _conn(db_path)
@@ -1070,22 +1123,53 @@ def get_fb_anger_by_zone(db_path=None):
             "SELECT "
             "  COALESCE(NULLIF(zona,''), 'sin_zona') as zona, "
             "  SUM(COALESCE(angrys_count,0) + COALESCE(sads_count,0) + COALESCE(hahas_count,0)) as negativos, "
-            "  COUNT(*) as total "
+            "  SUM(COALESCE(likes_count,0) + COALESCE(loves_count,0) + COALESCE(cares_count,0) "
+            "    + COALESCE(hahas_count,0) + COALESCE(wows_count,0) "
+            "    + COALESCE(sads_count,0) + COALESCE(angrys_count,0)) as total_reacciones, "
+            "  COUNT(*) as n_posts "
             "FROM fb_posts "
             "GROUP BY zona "
-            "HAVING total >= 3"
+            "HAVING n_posts >= 3"
         ).fetchall()
         result = []
         for r in rows:
-            total = r["total"] or 0
+            total_reac = r["total_reacciones"] or 0
             neg = r["negativos"] or 0
-            pct = neg / total * 100 if total > 0 else 0.0
+            pct = neg / total_reac * 100 if total_reac > 0 else 0.0
             result.append({
                 "zona": r["zona"],
                 "negativos": neg,
-                "total": total,
+                "total": r["n_posts"],
+                "total_reacciones": total_reac,
                 "pct_negativos": round(pct, 1),
             })
         return result
     finally:
         conn.close()
+
+
+def _fusionar_aprobaciones_por_categoria(aprobaciones: list) -> list:
+    """Fusiona lista de aprobaciones con posibles duplicados por categoria.
+
+    Suma doc_count, apoyo, critica, neutral. Recalcula pct.
+    Retorna lista ordenada por doc_count descendente.
+    """
+    fusionados = {}
+    for a in aprobaciones:
+        cat = a.get("categoria") or a.get("label") or ""
+        if cat not in fusionados:
+            fusionados[cat] = dict(a)
+            fusionados[cat]["doc_count"] = a.get("doc_count", 0)
+        else:
+            entry = fusionados[cat]
+            entry["doc_count"] += a.get("doc_count", 0)
+            entry["apoyo"] = entry.get("apoyo", 0) + a.get("apoyo", 0)
+            entry["critica"] = entry.get("critica", 0) + a.get("critica", 0)
+            entry["neutral"] = entry.get("neutral", 0) + a.get("neutral", 0)
+
+    total = sum(e["doc_count"] for e in fusionados.values()) or 1
+    result = sorted(fusionados.values(), key=lambda x: -x["doc_count"])
+    for i, entry in enumerate(result):
+        entry["id"] = i + 1
+        entry["pct"] = round(entry["doc_count"] / total * 100, 1)
+    return result

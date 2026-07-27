@@ -463,3 +463,14 @@ def test_euforia_positivos_siguen_tras_remocion():
     assert classify_emotion("Golazo de la seleccion, que campeones").emocion == "euforia"
     assert classify_emotion("Campeones del mundo, celebrando").emocion == "euforia"
     assert classify_emotion("Victoria historica, ganamos la copa").emocion == "euforia"
+
+
+def test_no_palabras_duplicadas_en_lexico():
+    from collections import defaultdict
+    from analytics.emotion import EMOTION_LEXICON
+    word_to_cats = defaultdict(list)
+    for cat, words in EMOTION_LEXICON.items():
+        for w in words:
+            word_to_cats[w].append(cat)
+    duplicates = {w: cats for w, cats in word_to_cats.items() if len(cats) > 1}
+    assert not duplicates, f"Palabras duplicadas: {duplicates}"

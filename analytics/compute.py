@@ -775,11 +775,11 @@ def detectar_zdi(pct_negativos_zona, n_posts_zona):
     """§F — ZDI: Zona Dominante.
 
     Fórmula literal:
-        Alerta si la tasa de publicaciones/comentarios negativos de una zona
-        supera 25%, con al menos 3 publicaciones de esa zona.
+        Alerta si el porcentaje de reacciones negativas sobre el total de
+        reacciones de una zona supera 25%, con almeno 3 publicaciones de esa zona.
 
     Args:
-        pct_negativos_zona: porcentaje de negativos en la zona (0-100).
+        pct_negativos_zona: porcentaje de reacciones negativas sobre total de reacciones en la zona (0-100).
         n_posts_zona: número de posts/comentarios de esa zona.
 
     Returns:

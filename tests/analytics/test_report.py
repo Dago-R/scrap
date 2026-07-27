@@ -118,7 +118,7 @@ def test_clima_narrativo_fallback_sin_texts():
     cn = data["bloque1"]["clima_narrativo"]
     assert cn["n_total_comentarios"] == 200  # 90+70+40
     assert cn["tono_score_ayer"] == 0.0
-    assert cn["formula_usada"] == "NSI = (positivos - negativos) / total * 100"
+    assert cn["formula_usada"].startswith("pct_favorable/pct_critico:")
 
 
 def test_clima_narrativo_con_texts_lexico():

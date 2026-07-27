@@ -200,7 +200,10 @@ def test_v07_tema_desconocido():
 def test_v07_tema_propuesta_pendiente_es_advertencia():
     d = _base_valid()
     d["bloque1"]["concentracion_tematica"]["ramas"][0]["tema"] = "tema_nuevo_ahi"
-    r = validar(d)
+    from unittest.mock import patch, mock_open
+    fake_pendientes = '[{"clave_propuesta": "tema_nuevo_ahi", "tipo": "tema", "estado": "pendiente"}]'
+    with patch("builtins.open", mock_open(read_data=fake_pendientes)):
+        r = validar(d)
     assert r.es_publicable
     v07_errors = [e for e in r.errores if e.codigo == "V07_CATEGORIA_DESCONOCIDA"
                   and "tema" in e.seccion]
@@ -212,7 +215,10 @@ def test_v07_tema_propuesta_pendiente_es_advertencia():
 def test_v07_tema_no_propuesta_es_bloqueante():
     d = _base_valid()
     d["bloque1"]["concentracion_tematica"]["ramas"][0]["tema"] = "tema_no_registrado"
-    r = validar(d)
+    from unittest.mock import patch, mock_open
+    fake_pendientes = '[]'
+    with patch("builtins.open", mock_open(read_data=fake_pendientes)):
+        r = validar(d)
     assert not r.es_publicable
     v07_errors = [e for e in r.errores if e.codigo == "V07_CATEGORIA_DESCONOCIDA"
                   and "tema" in e.seccion]
@@ -222,7 +228,10 @@ def test_v07_tema_no_propuesta_es_bloqueante():
 def test_v07_emocion_propuesta_pendiente_es_advertencia():
     d = _base_valid()
     d["bloque1"]["indice_emociones"]["emocion_dominante"] = "trust_nueva"
-    r = validar(d)
+    from unittest.mock import patch, mock_open
+    fake_pendientes = '[{"clave_propuesta": "trust_nueva", "tipo": "emocion", "estado": "pendiente"}]'
+    with patch("builtins.open", mock_open(read_data=fake_pendientes)):
+        r = validar(d)
     assert r.es_publicable
     v07_errors = [e for e in r.errores if e.codigo == "V07_CATEGORIA_DESCONOCIDA"
                   and "emocion_dominante" in e.seccion]
@@ -233,7 +242,10 @@ def test_v07_emocion_propuesta_pendiente_es_advertencia():
 def test_v07_emocion_no_propuesta_es_bloqueante():
     d = _base_valid()
     d["bloque1"]["indice_emociones"]["emocion_dominante"] = "super_feliz"
-    r = validar(d)
+    from unittest.mock import patch, mock_open
+    fake_pendientes = '[]'
+    with patch("builtins.open", mock_open(read_data=fake_pendientes)):
+        r = validar(d)
     assert not r.es_publicable
     v07_errors = [e for e in r.errores if e.codigo == "V07_CATEGORIA_DESCONOCIDA"
                   and "emocion_dominante" in e.seccion]
