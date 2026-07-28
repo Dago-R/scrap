@@ -25,9 +25,11 @@ class ValidationResult:
     def es_publicable(self) -> bool:
         return not any(e.severidad == "bloqueante" for e in self.errores)
 
+    @property
     def bloqueantes(self):
         return [e for e in self.errores if e.severidad == "bloqueante"]
 
+    @property
     def advertencias(self):
         return [e for e in self.errores if e.severidad == "advertencia"]
 

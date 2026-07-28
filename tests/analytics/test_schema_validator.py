@@ -78,7 +78,7 @@ def _base_valid():
 def test_valido_base_es_publicable():
     r = validar(_base_valid())
     assert r.es_publicable
-    assert len(r.bloqueantes()) == 0
+    assert len(r.bloqueantes) == 0
 
 
 def test_no_es_dict():
@@ -661,5 +661,5 @@ def test_validation_result_bloqueantes():
     r.errores.append(ValidationError("X", "y", "bloqueante", "t", "h"))
     r.errores.append(ValidationError("Z", "w", "advertencia", "t", "h"))
     assert not r.es_publicable
-    assert len(r.bloqueantes()) == 1
-    assert len(r.advertencias()) == 1
+    assert len(r.bloqueantes) == 1
+    assert len(r.advertencias) == 1

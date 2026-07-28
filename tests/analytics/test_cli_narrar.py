@@ -172,7 +172,7 @@ def test_narrar_no_modifica_campos_calculados(monkeypatch, tmp_path):
 
         from analytics.cli import cmd_narrar
         with patch("analytics.publish.publicar_analysis") as mock_pub:
-            mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+            mock_pub.return_value = MagicMock(es_publicable=True, advertencias=[])
             cmd_narrar(args)
 
     # Verificar que campos calculados NO cambiaron
@@ -237,7 +237,7 @@ def test_narrar_fallo_parcial_no_tumba_ejecucion(monkeypatch, tmp_path):
 
         from analytics.cli import cmd_narrar
         with patch("analytics.publish.publicar_analysis") as mock_pub:
-            mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+            mock_pub.return_value = MagicMock(es_publicable=True, advertencias=[])
             result = cmd_narrar(args)
 
     assert result == 0
@@ -295,9 +295,9 @@ def test_cmd_generar_derives_texts_from_context(monkeypatch):
 
     mock_gen = MagicMock(return_value=(
         {"meta": {}, "bloque1": {}, "bloque2": {}, "bloque3": {}, "bloque4": {}},
-        MagicMock(es_publicable=True, bloqueantes=lambda: [], advertencias=lambda: []),
+        MagicMock(es_publicable=True, bloqueantes=[], advertencias=[]),
     ))
-    mock_pub = MagicMock(return_value=MagicMock(es_publicable=True, advertencias=lambda: []))
+    mock_pub = MagicMock(return_value=MagicMock(es_publicable=True, advertencias=[]))
 
     patches = [
         ("dashboard.tema_aprobaciones.agregar_por_tema_automatico", mock_aprob),
@@ -381,9 +381,9 @@ def test_cmd_generar_tolerancia_fallo_plataforma(monkeypatch):
 
     mock_gen = MagicMock(return_value=(
         {"meta": {}, "bloque1": {}, "bloque2": {}, "bloque3": {}, "bloque4": {}},
-        MagicMock(es_publicable=True, bloqueantes=lambda: [], advertencias=lambda: []),
+        MagicMock(es_publicable=True, bloqueantes=[], advertencias=[]),
     ))
-    mock_pub = MagicMock(return_value=MagicMock(es_publicable=True, advertencias=lambda: []))
+    mock_pub = MagicMock(return_value=MagicMock(es_publicable=True, advertencias=[]))
 
     patches = [
         ("dashboard.tema_aprobaciones.agregar_por_tema_automatico", mock_aprob),
@@ -523,7 +523,7 @@ def test_importar_escribe_narrativas(tmp_path):
 
     from analytics.cli import cmd_narrar
     with patch("analytics.publish.publicar_analysis") as mock_pub:
-        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=[])
         result = cmd_narrar(args)
         written_data = mock_pub.call_args[0][0]
 
@@ -563,7 +563,7 @@ def test_importar_seccion_faltante_se_reporta(tmp_path):
 
     from analytics.cli import cmd_narrar
     with patch("analytics.publish.publicar_analysis") as mock_pub:
-        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=lambda: [])
+        mock_pub.return_value = MagicMock(es_publicable=True, advertencias=[])
         result = cmd_narrar(args)
         written_data = mock_pub.call_args[0][0]
 

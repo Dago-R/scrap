@@ -250,8 +250,8 @@ def cmd_generar(args):
     )
 
     if not resultado.es_publicable:
-        print(f"ERRORES ({len(resultado.bloqueantes())}):")
-        for e in resultado.bloqueantes():
+        print(f"ERRORES ({len(resultado.bloqueantes)}):")
+        for e in resultado.bloqueantes:
             print(f"  [{e.codigo}] {e.seccion}: {e.mensaje_humano}")
         return 1
 
@@ -261,12 +261,12 @@ def cmd_generar(args):
     resultado_pub = publicar_analysis(data, path=out_path)
     if resultado_pub.es_publicable:
         print(f"Analysis generado: {out_path}")
-        if resultado_pub.advertencias():
-            print(f"  ({len(resultado_pub.advertencias())} advertencias)")
+        if resultado_pub.advertencias:
+            print(f"  ({len(resultado_pub.advertencias)} advertencias)")
         return 0
     else:
         print("Error al escribir:")
-        for e in resultado_pub.bloqueantes():
+        for e in resultado_pub.bloqueantes:
             print(f"  [{e.codigo}] {e.mensaje_humano}")
         return 1
 
@@ -448,12 +448,12 @@ def _cmd_narrar_importar(args, data):
     resultado_pub = publicar_analysis(data, path=data_path, render_narrativas=False)
     if resultado_pub.es_publicable:
         print(f"Narrativas actualizadas: {data_path} ({aplicadas} secciones)")
-        if resultado_pub.advertencias():
-            print(f"  ({len(resultado_pub.advertencias())} advertencias)")
+        if resultado_pub.advertencias:
+            print(f"  ({len(resultado_pub.advertencias)} advertencias)")
         return 0
     else:
         print("Error al publicar narrativas:")
-        for e in resultado_pub.bloqueantes():
+        for e in resultado_pub.bloqueantes:
             print(f"  [{e.codigo}] {e.mensaje_humano}")
         return 1
 
@@ -583,12 +583,12 @@ def _cmd_narrar_usar_api(args, data):
     resultado_pub = publicar_analysis(data, path=data_path, render_narrativas=False)
     if resultado_pub.es_publicable:
         print(f"Narrativas actualizadas: {data_path}")
-        if resultado_pub.advertencias():
-            print(f"  ({len(resultado_pub.advertencias())} advertencias)")
+        if resultado_pub.advertencias:
+            print(f"  ({len(resultado_pub.advertencias)} advertencias)")
         return 0
     else:
         print("Error al publicar narrativas:")
-        for e in resultado_pub.bloqueantes():
+        for e in resultado_pub.bloqueantes:
             print(f"  [{e.codigo}] {e.mensaje_humano}")
         return 1
 
