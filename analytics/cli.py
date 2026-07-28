@@ -120,7 +120,7 @@ def cmd_generar(args):
 
     from analytics.queries import (
         get_fb_comments_with_context, get_tk_comments_with_context,
-        get_ext_comments_with_context,
+        get_ext_comments_with_context, get_temas_sugeridos_con_contexto,
     )
 
     # ÚNICA fuente de verdad: comentarios con contexto.
@@ -135,6 +135,12 @@ def cmd_generar(args):
         except Exception:
             pass
     texts = [c["texto"] for c in comentarios_con_contexto if c.get("texto")]
+
+    comentarios_con_temas = []
+    try:
+        comentarios_con_temas = get_temas_sugeridos_con_contexto()
+    except Exception:
+        pass
 
     # Obtener stats de plataformas desde las DBs
     fb_stats = None
@@ -234,6 +240,7 @@ def cmd_generar(args):
         aprobaciones, args.periodo, args.fecha_hasta,
         comentarios_texts=texts if texts else None,
         comentarios_con_contexto=comentarios_con_contexto if comentarios_con_contexto else None,
+        comentarios_con_temas=comentarios_con_temas or None,
         fb_stats=fb_stats,
         tk_stats=tk_stats,
         externos_stats=externos_stats,

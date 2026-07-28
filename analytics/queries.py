@@ -35,20 +35,32 @@ def get_fb_comments_with_context(db_path=None):
     """Fetch non-empty FB comments with their parent post_id for evidence tracing.
 
     Returns list of dicts: {"id": comment_id, "texto": message,
-    "post_id": post_id, "plataforma": "facebook"}.
+    "post_id": post_id, "plataforma": "facebook", "emocion": ..., "tema_sugerido": ...}.
     """
     db_path = db_path or _cfg.FACEBOOK_DB
     conn = _conn(db_path)
     try:
-        rows = conn.execute(
-            "SELECT comment_id, message, post_id FROM fb_comments "
-            "WHERE message IS NOT NULL AND message != ''"
-        ).fetchall()
-        return [
-            {"id": r["comment_id"], "texto": r["message"],
-             "post_id": r["post_id"], "plataforma": "facebook"}
-            for r in rows
-        ]
+        try:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id, emocion, tema_sugerido FROM fb_comments "
+                "WHERE message IS NOT NULL AND message != ''"
+            ).fetchall()
+            return [
+                {"id": r["comment_id"], "texto": r["message"],
+                 "post_id": r["post_id"], "plataforma": "facebook",
+                 "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"]}
+                for r in rows
+            ]
+        except Exception:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id FROM fb_comments "
+                "WHERE message IS NOT NULL AND message != ''"
+            ).fetchall()
+            return [
+                {"id": r["comment_id"], "texto": r["message"],
+                 "post_id": r["post_id"], "plataforma": "facebook"}
+                for r in rows
+            ]
     finally:
         conn.close()
 
@@ -71,20 +83,33 @@ def get_tk_comments_with_context(db_path=None):
     """Fetch non-empty TikTok comments with their parent video_id for evidence tracing.
 
     Returns list of dicts: {"id": comment_id, "texto": text,
-    "post_id": video_id, "plataforma": "tiktok"}.
+    "post_id": video_id, "plataforma": "tiktok",
+    "emocion": ..., "tema_sugerido": ...}.
     """
     db_path = db_path or _cfg.TIKTOK_DB
     conn = _conn(db_path)
     try:
-        rows = conn.execute(
-            "SELECT id, text, video_id FROM comments "
-            "WHERE text IS NOT NULL AND text != ''"
-        ).fetchall()
-        return [
-            {"id": r["id"], "texto": r["text"],
-             "post_id": r["video_id"], "plataforma": "tiktok"}
-            for r in rows
-        ]
+        try:
+            rows = conn.execute(
+                "SELECT id, text, video_id, emocion, tema_sugerido FROM comments "
+                "WHERE text IS NOT NULL AND text != ''"
+            ).fetchall()
+            return [
+                {"id": r["id"], "texto": r["text"],
+                 "post_id": r["video_id"], "plataforma": "tiktok",
+                 "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"]}
+                for r in rows
+            ]
+        except Exception:
+            rows = conn.execute(
+                "SELECT id, text, video_id FROM comments "
+                "WHERE text IS NOT NULL AND text != ''"
+            ).fetchall()
+            return [
+                {"id": r["id"], "texto": r["text"],
+                 "post_id": r["video_id"], "plataforma": "tiktok"}
+                for r in rows
+            ]
     finally:
         conn.close()
 
@@ -107,22 +132,104 @@ def get_ext_comments_with_context(db_path=None):
     """Fetch non-empty Externos comments with their parent post_id for evidence tracing.
 
     Returns list of dicts: {"id": comment_id, "texto": message,
-    "post_id": post_id, "plataforma": "externos"}.
+    "post_id": post_id, "plataforma": "externos",
+    "emocion": ..., "tema_sugerido": ...}.
     """
     db_path = db_path or _cfg.EXTERNOS_DB
     conn = _conn(db_path)
     try:
-        rows = conn.execute(
-            "SELECT comment_id, message, post_id FROM external_comments "
-            "WHERE message IS NOT NULL AND message != ''"
-        ).fetchall()
-        return [
-            {"id": r["comment_id"], "texto": r["message"],
-             "post_id": r["post_id"], "plataforma": "externos"}
-            for r in rows
-        ]
+        try:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id, emocion, tema_sugerido FROM external_comments "
+                "WHERE message IS NOT NULL AND message != ''"
+            ).fetchall()
+            return [
+                {"id": r["comment_id"], "texto": r["message"],
+                 "post_id": r["post_id"], "plataforma": "externos",
+                 "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"]}
+                for r in rows
+            ]
+        except Exception:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id FROM external_comments "
+                "WHERE message IS NOT NULL AND message != ''"
+            ).fetchall()
+            return [
+                {"id": r["comment_id"], "texto": r["message"],
+                 "post_id": r["post_id"], "plataforma": "externos"}
+                for r in rows
+            ]
     finally:
         conn.close()
+
+
+def get_temas_sugeridos_con_contexto(fb_db=None, tk_db=None, ext_db=None):
+    """Lee tema_sugerido persistido en las tres DBs.
+
+    Retorna lista de dicts compatible con comentarios_con_contexto:
+    {"id", "texto", "post_id", "plataforma", "tema_sugerido", "emocion"}
+
+    Solo incluye comentarios con tema_sugerido no nulo y no vacío.
+    """
+    result = []
+    # Facebook
+    try:
+        conn = _conn(fb_db or _cfg.FACEBOOK_DB)
+        try:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id, emocion, tema_sugerido "
+                "FROM fb_comments "
+                "WHERE tema_sugerido IS NOT NULL AND tema_sugerido != ''"
+            ).fetchall()
+            for r in rows:
+                result.append({
+                    "id": r["comment_id"], "texto": r["message"],
+                    "post_id": r["post_id"], "plataforma": "facebook",
+                    "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"],
+                })
+        finally:
+            conn.close()
+    except Exception:
+        pass
+    # TikTok
+    try:
+        conn = _conn(tk_db or _cfg.TIKTOK_DB)
+        try:
+            rows = conn.execute(
+                "SELECT id, text, video_id, emocion, tema_sugerido "
+                "FROM comments "
+                "WHERE tema_sugerido IS NOT NULL AND tema_sugerido != ''"
+            ).fetchall()
+            for r in rows:
+                result.append({
+                    "id": r["id"], "texto": r["text"],
+                    "post_id": r["video_id"], "plataforma": "tiktok",
+                    "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"],
+                })
+        finally:
+            conn.close()
+    except Exception:
+        pass
+    # Externos
+    try:
+        conn = _conn(ext_db or _cfg.EXTERNOS_DB)
+        try:
+            rows = conn.execute(
+                "SELECT comment_id, message, post_id, emocion, tema_sugerido "
+                "FROM external_comments "
+                "WHERE tema_sugerido IS NOT NULL AND tema_sugerido != ''"
+            ).fetchall()
+            for r in rows:
+                result.append({
+                    "id": r["comment_id"], "texto": r["message"],
+                    "post_id": r["post_id"], "plataforma": "externos",
+                    "emocion": r["emocion"], "tema_sugerido": r["tema_sugerido"],
+                })
+        finally:
+            conn.close()
+    except Exception:
+        pass
+    return result
 
 
 def get_fb_post_signatures(db_path=None):

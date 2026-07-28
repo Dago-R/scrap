@@ -233,7 +233,12 @@ def guardar_lote(lote: list, progreso_cb=None) -> dict:
                         if not texto:
                             continue
                         cid = generar_id_comentario(video_id, texto, idx)
-                        ok = insertar_comentario_tiktok(conn_tk, cid, video_id, texto)
+                        ok = insertar_comentario_tiktok(
+                            conn_tk, cid, video_id, texto,
+                            emocion=c.get("emocion") or None,
+                            confianza_emocion=c.get("confianza_emocion") or None,
+                            tema_sugerido=c.get("tema_sugerido") or None,
+                        )
                         if ok:
                             resumen["tk_comments"] += 1
                         else:

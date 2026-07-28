@@ -289,3 +289,43 @@ class TestDbEditsIntegration:
         post = conn.execute("SELECT * FROM external_posts WHERE post_id = 'ep2'").fetchone()
         assert post is None
         conn.close()
+
+
+class TestTikTokComentarioConEmocion:
+    def test_inserta_con_emocion_y_tema(self):
+        from dashboard.escritura_tiktok import insertar_comentario_tiktok
+        db = _crear_bd_temp(_TIKTOK_SCHEMA)
+        conn = sqlite3.connect(db)
+        conn.row_factory = sqlite3.Row
+        try:
+            ok = insertar_comentario_tiktok(
+                conn, "c_emo_1", "v_emo_1", "me gusta",
+                emocion="enojo", confianza_emocion="seguro", tema_sugerido="baches",
+            )
+            assert ok is True
+            row = conn.execute(
+                "SELECT id, video_id, text, emocion, confianza_emocion, tema_sugerido "
+                "FROM comments WHERE id = 'c_emo_1'"
+            ).fetchone()
+            assert row is not None
+            assert row["emocion"] == "enojo"
+            assert row["confianza_emocion"] == "seguro"
+            assert row["tema_sugerido"] == "baches"
+        finally:
+            conn.close()
+
+    def test_inserta_sin_emocion(self):
+        from dashboard.escritura_tiktok import insertar_comentario_tiktok
+        db = _crear_bd_temp(_TIKTOK_SCHEMA)
+        conn = sqlite3.connect(db)
+        conn.row_factory = sqlite3.Row
+        try:
+            ok = insertar_comentario_tiktok(conn, "c_noemo_1", "v_noemo_1", "texto plano")
+            assert ok is True
+            row = conn.execute(
+                "SELECT id, emocion, tema_sugerido FROM comments WHERE id = 'c_noemo_1'"
+            ).fetchone()
+            assert row["emocion"] is None
+            assert row["tema_sugerido"] is None
+        finally:
+            conn.close()

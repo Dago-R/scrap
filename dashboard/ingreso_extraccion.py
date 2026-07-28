@@ -515,16 +515,9 @@ def _aplicar_contrato(respuesta: dict, plataforma: str) -> dict:
                 "total": _num_confianza(reacs.get("total"), predeterminado="dudoso"),
             },
             "comentarios_count": _num_confianza(respuesta.get("comentarios_count")),
-            "compartidos": {"valor": None, "confianza": "manual"},
-            "vistas": {"valor": None, "confianza": "manual"},
-            "comentarios": [
-                {
-                    "texto": c.get("texto", ""),
-                    "autor": c.get("autor") or None,
-                    "confianza": "seguro",
-                }
-                for c in (respuesta.get("comentarios") or [])
-            ],
+            "compartidos": _num_confianza(respuesta.get("compartidos")) if respuesta.get("compartidos") is not None else {"valor": None, "confianza": "manual"},
+            "vistas": _num_confianza(respuesta.get("vistas")) if respuesta.get("vistas") is not None else {"valor": None, "confianza": "manual"},
+            "comentarios": _comentarios_desde_lista(respuesta.get("comentarios")),
         }
 
     elif plataforma == "tiktok":
@@ -539,20 +532,34 @@ def _aplicar_contrato(respuesta: dict, plataforma: str) -> dict:
                 "likes": _num_confianza(metrics.get("likes")),
                 "favoritos": _num_confianza(metrics.get("favoritos")),
                 "comentarios_count": _num_confianza(metrics.get("comentarios_count")),
-                "compartidos": {"valor": None, "confianza": "manual"},
-                "vistas": {"valor": None, "confianza": "manual"},
+                "compartidos": _num_confianza(metrics.get("compartidos")) if metrics.get("compartidos") is not None else {"valor": None, "confianza": "manual"},
+                "vistas": _num_confianza(metrics.get("vistas")) if metrics.get("vistas") is not None else {"valor": None, "confianza": "manual"},
             },
-            "comentarios": [
-                {
-                    "texto": c.get("texto", ""),
-                    "autor": c.get("autor") or None,
-                    "confianza": "seguro",
-                }
-                for c in (respuesta.get("comentarios") or [])
-            ],
+            "comentarios": _comentarios_desde_lista(respuesta.get("comentarios")),
         }
 
     raise ValueError(f"Plataforma no soportada: {plataforma}")
+
+
+
+def _comentarios_desde_lista(comentarios_raw):
+    """Convierte lista de comentarios del JSON de entrada al contrato interno.
+
+    Propaga emocion, confianza_emocion y tema_sugerido si están presentes.
+    """
+    result = []
+    for c in (comentarios_raw or []):
+        entry = {
+            "texto": c.get("texto", ""),
+            "autor": c.get("autor") or None,
+            "confianza": "seguro",
+        }
+        for campo in ("emocion", "confianza_emocion", "tema_sugerido"):
+            val = c.get(campo)
+            if val is not None and str(val).strip():
+                entry[campo] = str(val).strip()
+        result.append(entry)
+    return result
 
 
 # ═══════════════════════════════════

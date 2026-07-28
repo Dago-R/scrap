@@ -23,7 +23,10 @@ SCHEMA_COMMENTS = """CREATE TABLE IF NOT EXISTS comments (
     text TEXT,
     likes INTEGER DEFAULT 0,
     replies_count INTEGER DEFAULT 0,
-    created_at TEXT
+    created_at TEXT,
+    emocion TEXT,
+    confianza_emocion TEXT,
+    tema_sugerido TEXT
 )"""
 
 
@@ -38,6 +41,11 @@ def _ensure_tiktok_schema(conn: sqlite3.Connection):
     existing = conn.execute("PRAGMA table_info(comments)").fetchall()
     if not existing:
         conn.execute(SCHEMA_COMMENTS)
+    else:
+        cols = {r[1] for r in existing}
+        for col, tipo in [("emocion", "TEXT"), ("confianza_emocion", "TEXT"), ("tema_sugerido", "TEXT")]:
+            if col not in cols:
+                conn.execute(f"ALTER TABLE comments ADD COLUMN {col} {tipo}")
 
 
 def insertar_video(conn: sqlite3.Connection, datos: dict, video_id: str) -> bool:
@@ -70,12 +78,16 @@ def insertar_video(conn: sqlite3.Connection, datos: dict, video_id: str) -> bool
         return False
 
 
-def insertar_comentario_tiktok(conn: sqlite3.Connection, comment_id: str, video_id: str, texto: str) -> bool:
+def insertar_comentario_tiktok(
+    conn: sqlite3.Connection, comment_id: str, video_id: str, texto: str,
+    emocion=None, confianza_emocion=None, tema_sugerido=None,
+) -> bool:
     try:
         _ensure_tiktok_schema(conn)
         conn.execute(
-            "INSERT OR REPLACE INTO comments (id, video_id, text) VALUES (?, ?, ?)",
-            (comment_id, video_id, texto),
+            "INSERT OR REPLACE INTO comments (id, video_id, text, emocion, confianza_emocion, tema_sugerido) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (comment_id, video_id, texto, emocion, confianza_emocion, tema_sugerido),
         )
         conn.commit()
         return True

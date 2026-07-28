@@ -554,29 +554,42 @@ def agregar_por_tema(db_path):
 
 
 def agregar_por_tema_automatico(db_path, tabla="fb_comments", col_id="comment_id", col_texto="message"):
-    """Cuenta temas automáticamente vía clasificación léxica (classify_topic),
-    sin aprobación manual. Cada comentario con texto se clasifica y se cuenta
-    bajo el tema detectado (excluye 'no_aplica'/sin coincidencias). La postura
-    se deriva de la columna 'emocion' persistida en el comentario, si existe;
-    si no existe la columna, se usa EMOCION_DEFAULT. La intensidad de postura
-    usa siempre INTENSIDAD_POSTURA_DEFAULT ('moderada'), porque no hay revisión
-    humana que la ajuste.
+    """Cuenta temas usando `tema_sugerido` persistido en la DB.
+
+    Sin aprobación manual. Cada comentario con texto y tema_sugerido se cuenta
+    bajo esa clave. La postura se deriva de la columna 'emocion' persistida en
+    el comentario, si existe; si no, se usa EMOCION_DEFAULT. La intensidad de
+    postura usa siempre INTENSIDAD_POSTURA_DEFAULT ('moderada').
+
+    Si el texto libre de tema_sugerido coincide con una clave de TEMAS se usa
+    esa clave; si no, se usa el texto libre como clave cruda y se registra en
+    taxonomias_pendientes.json. Los comentarios sin tema_sugerido se registran
+    como propuesta abierta y no se incluyen en el agregado.
     """
-    from analytics.topic import classify_topic
+    from dashboard.tema_taxonomia import TEMAS
+    from analytics._propuestas import _registrar_propuesta
     import sqlite3
 
     conn = sqlite3.connect(db_path)
     try:
         cols = [r[1] for r in conn.execute(f"PRAGMA table_info({tabla})").fetchall()]
         tiene_emocion = "emocion" in cols
-        if tiene_emocion:
+        tiene_tema_sugerido = "tema_sugerido" in cols
+        if tiene_emocion and tiene_tema_sugerido:
             rows_raw = conn.execute(
-                f"SELECT {col_texto}, emocion FROM {tabla} "
+                f"SELECT {col_texto}, emocion, tema_sugerido FROM {tabla} "
                 f"WHERE {col_texto} IS NOT NULL AND {col_texto} != ''"
             ).fetchall()
+        elif tiene_tema_sugerido:
+            rows_raw = [
+                (r[0], None, r[1]) for r in conn.execute(
+                    f"SELECT {col_texto}, tema_sugerido FROM {tabla} "
+                    f"WHERE {col_texto} IS NOT NULL AND {col_texto} != ''"
+                ).fetchall()
+            ]
         else:
             rows_raw = [
-                (r[0], None) for r in conn.execute(
+                (r[0], None, None) for r in conn.execute(
                     f"SELECT {col_texto} FROM {tabla} "
                     f"WHERE {col_texto} IS NOT NULL AND {col_texto} != ''"
                 ).fetchall()
@@ -585,13 +598,28 @@ def agregar_por_tema_automatico(db_path, tabla="fb_comments", col_id="comment_id
         conn.close()
 
     filas = []
-    for texto, emocion in rows_raw:
-        resultado = classify_topic(texto)
-        if not resultado.tema or resultado.tema == "no_aplica":
+    for row in rows_raw:
+        texto = row[0]
+        emocion = row[1]
+        tema_sugerido = row[2] if len(row) > 2 else None
+        if tema_sugerido and str(tema_sugerido).strip():
+            tema_key = str(tema_sugerido).strip()
+            if tema_key not in TEMAS:
+                _registrar_propuesta(
+                    clave_propuesta=tema_key,
+                    ejemplo_texto=texto,
+                    tipo="tema",
+                )
+        else:
+            _registrar_propuesta(
+                clave_propuesta=texto[:80],
+                ejemplo_texto=texto,
+                tipo="tema",
+            )
             continue
         emo = emocion or EMOCION_DEFAULT
         filas.append((
-            resultado.tema, texto, derivar_postura(emo), emo, None,
+            tema_key, texto, derivar_postura(emo), emo, None,
             INTENSIDAD_POSTURA_DEFAULT,
         ))
 

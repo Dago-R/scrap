@@ -16,9 +16,9 @@ def _crear_bd_temp(tabla="fb_comments", cols_extra=""):
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     conn = sqlite3.connect(path)
-    extra = ""
+    extra = ", tema_sugerido TEXT"
     if cols_extra:
-        extra = ", " + cols_extra
+        extra += ", " + cols_extra
     if tabla == "fb_comments":
         conn.execute(
             f"CREATE TABLE {tabla} ("
@@ -47,8 +47,8 @@ class TestAutomaticoBasico:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "Hay mucha delincuencia en el centro, los robos aumentaron", "enojo"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "Hay mucha delincuencia en el centro, los robos aumentaron", "enojo", "seguridad"),
             )
             conn.commit()
             conn.close()
@@ -67,8 +67,8 @@ class TestAutomaticoBasico:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "El hospital necesita más médicos y medicamentos", "tristeza"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "El hospital necesita más médicos y medicamentos", "tristeza", "salud"),
             )
             conn.commit()
             conn.close()
@@ -121,14 +121,14 @@ class TestAutomaticoBasico:
         try:
             conn = sqlite3.connect(db)
             datos = [
-                ("c1", "Los baches en las calles están terribles", "enojo"),
-                ("c2", "Mucha delincuencia y robos en el barrio", "miedo"),
-                ("c3", "Las escuelas necesitan más maestros y libros", "tristeza"),
-                ("c4", "El hospital necesita más médicos", "tristeza"),
-                ("c5", "Otro bache en la calle principal", "enojo"),
+                ("c1", "Los baches en las calles están terribles", "enojo", "obras_servicios"),
+                ("c2", "Mucha delincuencia y robos en el barrio", "miedo", "seguridad"),
+                ("c3", "Las escuelas necesitan más maestros y libros", "tristeza", "educacion"),
+                ("c4", "El hospital necesita más médicos", "tristeza", "salud"),
+                ("c5", "Otro bache en la calle principal", "enojo", "obras_servicios"),
             ]
             conn.executemany(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
                 datos,
             )
             conn.commit()
@@ -152,11 +152,11 @@ class TestSinTablaEmocion:
         conn = sqlite3.connect(path)
         conn.execute(
             "CREATE TABLE fb_comments ("
-            "comment_id TEXT PRIMARY KEY, message TEXT)"
+            "comment_id TEXT PRIMARY KEY, message TEXT, tema_sugerido TEXT)"
         )
         conn.execute(
-            "INSERT INTO fb_comments (comment_id, message) VALUES (?, ?)",
-            ("c1", "Hay mucha delincuencia y robos en la zona"),
+            "INSERT INTO fb_comments (comment_id, message, tema_sugerido) VALUES (?, ?, ?)",
+            ("c1", "Hay mucha delincuencia y robos en la zona", "seguridad"),
         )
         conn.commit()
         conn.close()
@@ -177,8 +177,8 @@ class TestPosturaDerivada:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "Hay mucha delincuencia en esta ciudad", "enojo"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "Hay mucha delincuencia en esta ciudad", "enojo", "seguridad"),
             )
             conn.commit()
             conn.close()
@@ -196,8 +196,8 @@ class TestPosturaDerivada:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "Buen hospital con buenos médicos", "alegria"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "Buen hospital con buenos médicos", "alegria", "salud"),
             )
             conn.commit()
             conn.close()
@@ -215,11 +215,11 @@ class TestPosturaDerivada:
         os.close(fd)
         conn = sqlite3.connect(path)
         conn.execute(
-            "CREATE TABLE fb_comments (comment_id TEXT PRIMARY KEY, message TEXT)"
+            "CREATE TABLE fb_comments (comment_id TEXT PRIMARY KEY, message TEXT, tema_sugerido TEXT)"
         )
         conn.execute(
-            "INSERT INTO fb_comments (comment_id, message) VALUES (?, ?)",
-            ("c1", "Hay mucha delincuencia y robos en la zona"),
+            "INSERT INTO fb_comments (comment_id, message, tema_sugerido) VALUES (?, ?, ?)",
+            ("c1", "Hay mucha delincuencia y robos en la zona", "seguridad"),
         )
         conn.commit()
         conn.close()
@@ -239,8 +239,8 @@ class TestIntensidadSiempreModerada:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "Hay mucha delincuencia en esta ciudad", "enojo"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "Hay mucha delincuencia en esta ciudad", "enojo", "seguridad"),
             )
             conn.commit()
             conn.close()
@@ -259,8 +259,8 @@ class TestNoTemaAprobaciones:
         try:
             conn = sqlite3.connect(db)
             conn.execute(
-                "INSERT INTO fb_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-                ("c1", "Hay mucha delincuencia y robos en la zona", "enojo"),
+                "INSERT INTO fb_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+                ("c1", "Hay mucha delincuencia y robos en la zona", "enojo", "seguridad"),
             )
             conn.commit()
 
@@ -283,11 +283,11 @@ class TestPlataformasAlternativas:
         conn = sqlite3.connect(path)
         conn.execute(
             "CREATE TABLE comments ("
-            "id TEXT PRIMARY KEY, text TEXT, emocion TEXT)"
+            "id TEXT PRIMARY KEY, text TEXT, emocion TEXT, tema_sugerido TEXT)"
         )
         conn.execute(
-            "INSERT INTO comments (id, text, emocion) VALUES (?, ?, ?)",
-            ("tk1", "Los buses están tardando mucho y el tráfico está terrible", "enojo"),
+            "INSERT INTO comments (id, text, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+            ("tk1", "Los buses están tardando mucho y el tráfico está terrible", "enojo", "movilidad"),
         )
         conn.commit()
         conn.close()
@@ -307,11 +307,11 @@ class TestPlataformasAlternativas:
         conn = sqlite3.connect(path)
         conn.execute(
             "CREATE TABLE external_comments ("
-            "comment_id TEXT PRIMARY KEY, message TEXT, emocion TEXT)"
+            "comment_id TEXT PRIMARY KEY, message TEXT, emocion TEXT, tema_sugerido TEXT)"
         )
         conn.execute(
-            "INSERT INTO external_comments (comment_id, message, emocion) VALUES (?, ?, ?)",
-            ("ext1", "La corrupción en el municipio es inaceptable", "indignacion"),
+            "INSERT INTO external_comments (comment_id, message, emocion, tema_sugerido) VALUES (?, ?, ?, ?)",
+            ("ext1", "La corrupción en el municipio es inaceptable", "indignacion", "gobernanza"),
         )
         conn.commit()
         conn.close()

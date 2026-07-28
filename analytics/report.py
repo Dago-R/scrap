@@ -44,6 +44,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
                        tema_aprobaciones_db: str | None = None,
                        comentarios_texts: list[str] | None = None,
                        comentarios_con_contexto: list[dict] | None = None,
+                       comentarios_con_temas: list[dict] | None = None,
                        textos_previos: list[str] | None = None,
                        es_oficial: bool = False,
                        # Bloque 6.1: historical data
@@ -78,6 +79,10 @@ def construir_analysis(aprobaciones_agrupadas: list,
             evidencia (_evidencia_periodo.json) que el paso narrar
             consume para resolver URLs reales. Campo interno no
             incluido en analysis.json; se persiste aparte.
+        comentarios_con_temas: lista de dicts con keys "id", "texto",
+            "post_id", "plataforma", "tema_sugerido", "emocion"
+            devuelta por get_temas_sugeridos_con_contexto(). Si se provee,
+            se usa como fuente de temas en vez de classify_topic().
         textos_previos: textos del período anterior para temas emergentes.
         es_oficial: True si los posts son de fuentes oficiales (activa
             regla "me divierte" en clasificación de emoción).
@@ -211,15 +216,18 @@ def construir_analysis(aprobaciones_agrupadas: list,
         }
         indice_emociones.update(pcts_global)
 
-    # ── 16.2: Clasificación temática por reglas léxicas ──
-    topic_counts: dict[str, int] = {}
+    # ── 16.2: Clasificación temática ──
     topic_results_by_text: dict[int, TopicResult] = {}
-    if comentarios_texts:
+    tema_por_comment_id: dict[str, str] = {}
+    if comentarios_con_temas:
+        for c in comentarios_con_temas:
+            ts = c.get("tema_sugerido")
+            if ts:
+                tema_por_comment_id[c["id"]] = ts
+    elif comentarios_texts:
         for i, text in enumerate(comentarios_texts):
             result = classify_topic(text)
             topic_results_by_text[i] = result
-            tema = result.tema
-            topic_counts[tema] = topic_counts.get(tema, 0) + 1
 
     ramas = []
     for t in aprobaciones_agrupadas:
@@ -235,7 +243,16 @@ def construir_analysis(aprobaciones_agrupadas: list,
     # URLs reales sin volver a tocar las DBs crudas.
     evidencia_por_tema: dict[str, set[str]] = {}
     evidencia_por_emocion: dict[str, set[str]] = {}
-    if comentarios_con_contexto and topic_results_by_text:
+    if tema_por_comment_id and comentarios_con_contexto:
+        for ctx in comentarios_con_contexto:
+            post_id = ctx.get("post_id", "")
+            cid = ctx.get("id", "")
+            if not post_id or not cid:
+                continue
+            tema = tema_por_comment_id.get(cid)
+            if tema:
+                evidencia_por_tema.setdefault(tema, set()).add(post_id)
+    elif comentarios_con_contexto and topic_results_by_text:
         for i, ctx in enumerate(comentarios_con_contexto):
             post_id = ctx.get("post_id", "")
             if not post_id:
@@ -258,7 +275,21 @@ def construir_analysis(aprobaciones_agrupadas: list,
 
     # ── Mapear tema → zona (necesario para bloque1 y bloque3) ──
     zona_por_tema: dict[str, str] = {}
-    if comentarios_texts:
+    if tema_por_comment_id and comentarios_con_contexto:
+        for ctx in comentarios_con_contexto:
+            texto = ctx.get("texto", "")
+            cid = ctx.get("id", "")
+            if not texto or not cid:
+                continue
+            tema = tema_por_comment_id.get(cid)
+            if not tema:
+                continue
+            zona_result = detectar_zona(texto)
+            if zona_result.zona and tema:
+                if tema not in zona_por_tema:
+                    zona_por_tema[tema] = zona_result.zona
+            es_propuesta_zona(texto)
+    elif comentarios_texts:
         for i, text in enumerate(comentarios_texts):
             topic_result = topic_results_by_text.get(i)
             if topic_result is None:
@@ -601,7 +632,19 @@ def construir_analysis(aprobaciones_agrupadas: list,
 
     # ── 16.3: Temas emergentes ──
     emergentes_result = {}
-    if comentarios_texts and topic_results_by_text:
+    if tema_por_comment_id and comentarios_con_contexto:
+        textos_sin_tema_claro = [
+            ctx.get("texto", "") for ctx in comentarios_con_contexto
+            if ctx.get("id") not in tema_por_comment_id and ctx.get("texto")
+        ]
+        if textos_sin_tema_claro:
+            emergentes_result = analizar_emergentes(
+                textos_sin_tema_claro,
+                textos_previos=textos_previos,
+                top_n=10,
+                min_freq=2,
+            )
+    elif comentarios_texts and topic_results_by_text:
         textos_sin_tema_claro = []
         for i, text in enumerate(comentarios_texts):
             tr = topic_results_by_text.get(i)
