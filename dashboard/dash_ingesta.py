@@ -95,8 +95,8 @@ def _contrato_vacio(plataforma: str) -> dict:
 def seccion_revisar_lote() -> None:
     """Pantalla de revisión editable post-extracción (Fase 3).
 
-    Dispara extracción con Groq (Llama 4 Scout), muestra tarjetas editables
-    con resaltado por confianza, y produce datos_revisados.
+    Muestra tarjetas editables con resaltado por confianza y produce datos_revisados.
+    La extracción por IA está deshabilitada; los posts llegan desde 'Importar JSON'.
     """
     lote = st.session_state["lote_ingreso"]
     pendientes = [p for p in lote if p["estado"] == "pendiente"]
@@ -110,9 +110,9 @@ def seccion_revisar_lote() -> None:
     if pendientes:
         st.markdown("### 🔍 Extracción con IA")
         st.caption(
-            "Groq (Llama 4 Scout) leerá las capturas y extraerá texto, fechas, "
-            "reacciones y comentarios. Los números borrosos o no visibles "
-            "quedarán marcados para que los completes."
+            "El lote tiene posts pendientes de procesar. "
+            "La extracción automática por IA está deshabilitada. "
+            "Usa la pestaña 'Importar JSON' para subir datos ya extraídos."
         )
         if st.button("🔍 Extraer y revisar lote", width='stretch', type="primary"):
             from dashboard.ingreso_extraccion import extraer_posts_desde_archivos
@@ -209,7 +209,7 @@ def seccion_revisar_lote() -> None:
                 )
 
                 if is_error:
-                    st.error(f"⚠️ Groq no pudo leer esta captura: «{datos['error']}». Llénala a mano.")
+                    st.error(f"⚠️ Error al procesar esta entrada: «{datos['error']}». Revisa el JSON importado.")
                     datos = _contrato_vacio(item["plataforma"])
 
                 with st.form(key=f"form_revision_{id_}"):

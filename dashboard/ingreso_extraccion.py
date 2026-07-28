@@ -287,14 +287,6 @@ REGLAS:
 """
 
 
-def _construir_prompt(plataforma: str) -> str:
-    if plataforma == "facebook":
-        return _PROMPT_FACEBOOK
-    elif plataforma == "tiktok":
-        return _PROMPT_TIKTOK
-    raise ValueError(f"Plataforma no soportada: {plataforma}")
-
-
 # ═══════════════════════════════════
 # Prompts MULTI-POST (segmentación + enlace) — PDF/imágenes
 # ═══════════════════════════════════
@@ -628,32 +620,6 @@ def _extraer_lista_posts(parsed: Any) -> list:
 # ═══════════════════════════════════
 # Conversión de archivos a partes inline para IA
 # ═══════════════════════════════════
-
-def _archivos_a_partes(archivos: list) -> list:
-    partes = []
-    for arch in archivos:
-        try:
-            if hasattr(arch, "getvalue"):
-                data = arch.getvalue()
-                mime = _detectar_mime(data, getattr(arch, "type", None))
-            elif isinstance(arch, bytes):
-                data = arch
-                mime = _detectar_mime(data)
-            else:
-                import io
-                from PIL import Image
-                buf = io.BytesIO()
-                if hasattr(arch, "save"):
-                    arch.save(buf, format="PNG")
-                else:
-                    Image.open(arch).save(buf, format="PNG")
-                data = buf.getvalue()
-                mime = "image/png"
-            partes.append({"mime_type": mime, "data": data})
-        except Exception:
-            continue
-    return partes
-
 
 def _archivos_a_paginas(archivos: list) -> list[dict]:
     partes = []
@@ -996,65 +962,4 @@ def extraer_posts_desde_archivos(archivos: list, plataforma: str) -> dict:
     return {"error": ultimo_error or "Error desconocido"}
 
 
-# ═══════════════════════════════════
-# Función principal 1-POST (compat con Fase 2 original)
-# ═══════════════════════════════════
 
-def extraer_post_desde_capturas(imagenes: list, plataforma: str) -> dict:
-    """Extrae datos de UN post desde capturas con Groq Visión (compat).
-
-    Args:
-        imagenes: Lista de UploadedFile de Streamlit o bytes.
-        plataforma: "facebook" | "tiktok".
-
-    Returns:
-        Dict con el contrato JSON estructurado.
-        En error grave retorna {"error": "<motivo>"}.
-    """
-    if not llm_disponible():
-        return {"error": "Extracción por IA deshabilitada. Usa 'Importar JSON' en el panel de carga."}
-
-    if not imagenes:
-        return {"error": "No se recibieron imágenes"}
-
-    if plataforma not in ("facebook", "tiktok"):
-        return {"error": f"Plataforma no soportada: {plataforma}"}
-
-    image_parts = _archivos_a_partes(imagenes)
-    if not image_parts:
-        return {"error": "Ninguna imagen pudo procesarse"}
-
-    prompt = _construir_prompt(plataforma)
-    ultimo_error = None
-
-    for intento in range(2):
-        try:
-            texto_respuesta = chat_vision(prompt, image_parts)
-            if not texto_respuesta or not texto_respuesta.strip():
-                ultimo_error = "Groq devolvió respuesta vacía"
-                if intento == 0:
-                    prompt = (
-                        prompt
-                        + "\n\nADVERTENCIA: la respuesta anterior fue inválida. "
-                        "Devuelve SOLO JSON, sin markdown, sin texto extra."
-                    )
-                continue
-
-            parsed = _parsear_respuesta(texto_respuesta)
-            if parsed is None:
-                ultimo_error = "No se pudo parsear el JSON de Groq"
-                if intento == 0:
-                    prompt = (
-                        prompt
-                        + "\n\nADVERTENCIA: la respuesta anterior no fue JSON válido. "
-                        "Devuelve SOLO JSON, sin markdown, sin texto extra."
-                    )
-                continue
-
-            return _aplicar_contrato(parsed, plataforma)
-
-        except Exception as e:
-            ultimo_error = f"Error en llamada al modelo de visión: {e}"
-            continue
-
-    return {"error": ultimo_error or "Error desconocido"}

@@ -67,6 +67,46 @@ TEMAS = {
         "desc": "eventos, fiestas, festivales, tradiciones, conciertos, canchas, "
         "torneos y deportistas.",
     },
+    "vivienda": {
+        "label": "Vivienda y propiedad",
+        "desc": "invasiones, lotificaciones, escrituras, alquiler, vivienda social, "
+        "acceso a lote propio, desalojos y condiciones de vivienda.",
+    },
+    "turismo_comercio": {
+        "label": "Turismo y comercio local",
+        "desc": "turistas, comercio informal, mercado municipal, zona rosa, "
+        "tianguis, vendedores ambulantes, ferias comerciales y reactivación económica local.",
+    },
+    "juventud": {
+        "label": "Juventud y niñez",
+        "desc": "jóvenes, adolescentes, niños, espacios recreativos juveniles, "
+        "prevención de pandillas, reintegración, programas para jóvenes en riesgo.",
+    },
+    "adulto_mayor": {
+        "label": "Adulto mayor",
+        "desc": "pensión, vejez, tercera edad, atención al adulto mayor, "
+        "centros de día, medicamentos para ancianos, jubilación.",
+    },
+    "genero_familia": {
+        "label": "Género y familia",
+        "desc": "violencia doméstica, violencia de género, feminicidio, embarazo adolescente, "
+        "mujer, igualdad, derechos de la mujer, familia, paternidad responsable.",
+    },
+    "tecnologia_digital": {
+        "label": "Tecnología y servicios digitales",
+        "desc": "wifi, internet gratuito, aplicaciones municipales, trámites en línea, "
+        "digitalización, conectividad, redes municipales.",
+    },
+    "fe_religion": {
+        "label": "Fe y religión",
+        "desc": "iglesia, procesión, semana santa, fiestas patronales, santa ana, "
+        "religiosidad, fe, culto, ceremonia religiosa, cofradía.",
+    },
+    "politica_electoral": {
+        "label": "Política y elecciones",
+        "desc": "elecciones, campaña, candidato, partido político, voto, "
+        "promesa de campaña, propaganda, ARENA, FMLN, Nuevas Ideas, alcalde electo.",
+    },
     "apoyo_generico": {
         "label": "Mensajes de apoyo",
         "desc": "felicitaciones, bendiciones o 'buen trabajo' SIN un tema concreto.",
@@ -106,6 +146,8 @@ POSTURAS = {
 POSTURAS_VALIDAS = set(POSTURAS.keys())
 POSTURA_LABELS = dict(POSTURAS)
 POSTURA_DEFAULT = "neutral"
+INTENSIDADES_POSTURA = {"leve", "moderada", "fuerte"}
+INTENSIDAD_POSTURA_DEFAULT = "moderada"
 
 # Sinonimos frecuentes que puede devolver el modelo -> postura canonica.
 _POSTURA_SINONIMOS = {
@@ -133,6 +175,14 @@ REMAP_LEGACY = {
     "cultura": "cultura_deportes",
     "deportes": "cultura_deportes",
     "apoyo_generico": "apoyo_generico",
+    "vivienda": "vivienda",
+    "turismo_comercio": "turismo_comercio",
+    "juventud": "juventud",
+    "adulto_mayor": "adulto_mayor",
+    "genero_familia": "genero_familia",
+    "tecnologia_digital": "tecnologia_digital",
+    "fe_religion": "fe_religion",
+    "politica_electoral": "politica_electoral",
     "no_aplica": "no_aplica",
 }
 

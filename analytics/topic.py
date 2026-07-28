@@ -146,6 +146,85 @@ TOPIC_LEXICON: dict[str, set[str]] = {
         "olímpico", "olimpico", "maratón", "maraton",
         "velódromo", "polideportivo", "gimnasio",
     },
+    # ── Vivienda y propiedad ──
+    "vivienda": {
+        "vivienda", "casa", "casas", "lote", "lotes", "terreno", "terrenos",
+        "escritura", "escrituras", "alquiler", "alquilar", "renta", "arrendamiento",
+        "invasion", "invasión", "invasores", "desalojo", "desalojos",
+        "lotificacion", "lotificación", "propiedad", "propiedades",
+        "vivienda social", "subsidio habitacional", "colonia", "residencial",
+        "apartamento", "apartamentos", "habitacion", "habitación",
+        "dueno de casa", "dueño de casa", "inquilino", "hipoteca",
+    },
+    # ── Turismo y comercio local ──
+    "turismo_comercio": {
+        "turismo", "turista", "turistas", "visitar", "visita",
+        "mercado", "mercado municipal", "tianguis", "feria", "ferias",
+        "vendedor", "vendedores", "ambulante", "ambulantes", "comercio informal",
+        "zona rosa", "centro historico", "centro histórico", "atractivo",
+        "restaurante", "restaurantes", "hotel", "hoteles", "hostal",
+        "gastronomia", "gastronomía", "artesania", "artesanías",
+        "reactivacion economica", "reactivación económica", "emprendedor local",
+        "compras", "tienda", "tiendas", "kiosco", "plaza comercial",
+    },
+    # ── Juventud y niñez ──
+    "juventud": {
+        "joven", "jóvenes", "jovenes", "juventud", "adolescente", "adolescentes",
+        "niño", "niños", "niña", "niñas", "infancia", "menor", "menores",
+        "espacio juvenil", "programa para jovenes", "prevencion de pandillas",
+        "prevención de pandillas", "reintegracion", "reintegración",
+        "joven en riesgo", "jovenes en riesgo", "beca juvenil",
+        "deporte juvenil", "recreacion", "recreación", "ludoteca",
+        "guarderia", "guardería", "escuela de futbol", "academia juvenil",
+    },
+    # ── Adulto mayor ──
+    "adulto_mayor": {
+        "adulto mayor", "adultos mayores", "anciano", "ancianos",
+        "anciana", "ancianas", "vejez", "tercera edad", "pensión", "pension",
+        "pensionado", "pensionados", "jubilacion", "jubilación", "jubilado",
+        "jubilados", "centro de dia", "centro de día", "atencion al adulto",
+        "atención al adulto", "medicamento para anciano", "abuelito", "abuelitos",
+        "abuelo", "abuela", "gerontologia", "gerontología",
+    },
+    # ── Género y familia ──
+    "genero_familia": {
+        "genero", "género", "mujer", "mujeres", "violencia domestica",
+        "violencia doméstica", "violencia de genero", "violencia de género",
+        "feminicidio", "maltrato", "maltrato familiar", "embarazo adolescente",
+        "igualdad", "derechos de la mujer", "machismo", "acoso sexual",
+        "abuso sexual", "familia", "familias", "paternidad", "maternidad",
+        "maternidad responsable", "paternidad responsable", "custodia",
+        "pension alimenticia", "pensión alimenticia", "divorcio",
+    },
+    # ── Tecnología y servicios digitales ──
+    "tecnologia_digital": {
+        "wifi", "internet", "internet gratuito", "conectividad", "red municipal",
+        "aplicacion municipal", "aplicación municipal", "tramite en linea",
+        "trámite en línea", "digitalizacion", "digitalización", "app",
+        "plataforma digital", "sistema informatico", "sistema informático",
+        "tecnologia", "tecnología", "computadora", "computadoras", "tablet",
+        "smartphone", "datos abiertos", "gobierno digital", "e-gobierno",
+    },
+    # ── Fe y religión ──
+    "fe_religion": {
+        "iglesia", "iglesias", "procesion", "procesión", "semana santa",
+        "fiestas patronales", "santa ana", "patron", "patrón", "patrona",
+        "fe", "religion", "religión", "religiosa", "religioso", "culto",
+        "misa", "celebracion religiosa", "celebración religiosa",
+        "cofradia", "cofradía", "hermandad", "bautismo", "confirmacion",
+        "confirmación", "primera comunion", "primera comunión", "novena",
+        "rezo", "rosario", "dios", "cristo", "virgen", "santo", "santa",
+    },
+    # ── Política y elecciones ──
+    "politica_electoral": {
+        "elecciones", "eleccion", "elección", "campaña", "campana",
+        "candidato", "candidatos", "candidata", "candidatas",
+        "partido", "partidos", "voto", "votar", "sufragio",
+        "promesa de campaña", "promesa de campana", "propaganda politica",
+        "propaganda política", "ARENA", "FMLN", "Nuevas Ideas", "CD",
+        "alcalde electo", "concejo municipal", "diputado", "diputados",
+        "electo", "electa", "TSE", "urna", "papeleta", "planilla",
+    },
     # ── Apoyo genérico ──
     "apoyo_generico": {
         "buen trabajo", "bien hecho", "sigue asi", "sigue así",

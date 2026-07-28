@@ -21,10 +21,30 @@ from dashboard.tema_taxonomia import (
     EMOCION_LABELS,
     EMOCION_DEFAULT,
     EMOCIONES_VALIDAS,
+    INTENSIDADES_POSTURA,
+    INTENSIDAD_POSTURA_DEFAULT,
 )
 
 # Opciones del selector de tema: temas englobantes + 'sin tema'.
 _OPCIONES = list(TEMAS_VISIBLES) + ["no_aplica"]
+
+# Emociones agrupadas para el selector (subconjunto legible de las ~50 disponibles)
+_EMOCIONES_SELECTOR = [
+    # Positivas
+    "serenidad", "alegria", "euforia",
+    "confianza", "admiracion", "reconocimiento", "satisfaccion",
+    "optimismo", "esperanza", "amor_civico",
+    # Neutras / cívicas
+    "calma", "interes", "expectativa", "objecion", "curiosidad",
+    # Negativas leves
+    "preocupacion", "aprension", "fastidio", "molestia", "melancolia",
+    # Negativas fuertes
+    "enojo", "furia", "ira", "reclamo",
+    "desagrado", "repulsion", "indignacion_moral", "indignacion",
+    "tristeza", "dolor", "ironia", "incredulidad", "ansiedad",
+    "vigilancia", "agresividad", "desprecio",
+]
+_EMOCIONES_SELECTOR_LABELS = {k: EMOCION_LABELS.get(k, k) for k in _EMOCIONES_SELECTOR}
 
 
 def _label_opcion(clave):
@@ -131,27 +151,54 @@ def render_revisor_temas(db_path, tabla="fb_comments", col_id="comment_id",
 
             resultado_tema = classify_topic(texto)
             tema_contado = resultado_tema.tema if resultado_tema.tema in _OPCIONES else "no_aplica"
-            default_idx = _OPCIONES.index(tema_contado)
+            default_idx_tema = _OPCIONES.index(tema_contado)
 
-            c1, c2 = st.columns([5, 1])
+            # Emoción por defecto: la guardada en fb_comments (viene del JSON importado),
+            # si existe y es válida; si no, "calma".
+            emo_default = emocion_guardada if emocion_guardada in _EMOCIONES_SELECTOR else EMOCION_DEFAULT
+            default_idx_emo = _EMOCIONES_SELECTOR.index(emo_default) if emo_default in _EMOCIONES_SELECTOR else 0
+
+            c1, c2, c3, c4 = st.columns([4, 3, 2, 1])
             with c1:
-                sel = st.selectbox(
-                    "Tema", _OPCIONES, format_func=_label_opcion,
-                    key=f"sel_{cid}", label_visibility="collapsed",
-                    index=default_idx,
+                sel_tema = st.selectbox(
+                    "Tema",
+                    _OPCIONES,
+                    format_func=_label_opcion,
+                    key=f"sel_tema_{cid}",
+                    label_visibility="collapsed",
+                    index=default_idx_tema,
                 )
+            with c2:
+                sel_emo = st.selectbox(
+                    "Emoción",
+                    _EMOCIONES_SELECTOR,
+                    format_func=lambda k: _EMOCIONES_SELECTOR_LABELS.get(k, k),
+                    key=f"sel_emo_{cid}",
+                    label_visibility="collapsed",
+                    index=default_idx_emo,
+                )
+            with c3:
+                sel_intensidad = st.selectbox(
+                    "Intensidad",
+                    ["leve", "moderada", "fuerte"],
+                    index=1,
+                    key=f"sel_int_{cid}",
+                    label_visibility="collapsed",
+                )
+            with c4:
+                if st.button("Aprobar", key=f"ap_{cid}"):
+                    guardar_aprobacion(
+                        db_path, cid, sel_tema, texto=texto,
+                        tema_sugerido=tema_contado,
+                        tono=None, confianza=None,
+                        emocion=sel_emo,
+                        intensidad_postura=sel_intensidad,
+                    )
+                    st.rerun()
+
             if resultado_tema.n_coincidencias:
                 st.caption(
-                    f"Conteo léxico: {_label_opcion(tema_contado)} "
+                    f"Léxico: {_label_opcion(tema_contado)} "
                     f"({resultado_tema.n_coincidencias} coincidencia(s): "
                     f"{', '.join(resultado_tema.evidence[:5])})"
                 )
-            with c2:
-                if st.button("Aprobar", key=f"ap_{cid}"):
-                    guardar_aprobacion(
-                        db_path, cid, sel, texto=texto,
-                        tema_sugerido=tema_contado,
-                        tono=None, confianza=None,
-                        emocion=emocion_guardada or None,
-                    )
-                    st.rerun()
