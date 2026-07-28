@@ -1,12 +1,14 @@
 """
-Módulo de extracción desde capturas/PDF con Groq (Llama 4 Scout visión).
+Módulo de extracción y normalización de datos de posts.
 
-Fase 2 — no toca UI ni DB.
 Funciones públicas:
-  - extraer_post_desde_capturas(imagenes, plataforma) -> dict   (1 post, compat)
-  - extraer_posts_desde_archivos(archivos, plataforma) -> dict  (N posts; PDF/img)
+  - extraer_post_desde_capturas(imagenes, plataforma) -> dict   (requiere IA externa deshabilitada)
+  - extraer_posts_desde_archivos(archivos, plataforma) -> dict  (requiere IA externa deshabilitada)
   - normalizar_numero(texto) -> int | None
   - resolver_fecha_relativa(texto, hoy=None) -> str | None
+
+El flujo de ingesta actual es via JSON importado externamente.
+Ver seccion_importar_json() en dash_ingesta.py.
 """
 
 import json
@@ -926,7 +928,7 @@ def extraer_posts_desde_archivos(archivos: list, plataforma: str) -> dict:
         En error grave: {"error": "<motivo>"}.
     """
     if not llm_disponible():
-        return {"error": "LLM_API_KEY / NVIDIA_API_KEY no configurada en variable de entorno ni st.secrets"}
+        return {"error": "Extracción por IA deshabilitada. Usa 'Importar JSON' en el panel de carga."}
 
     if not archivos:
         return {"error": "No se recibieron archivos"}
@@ -1003,7 +1005,7 @@ def extraer_post_desde_capturas(imagenes: list, plataforma: str) -> dict:
         En error grave retorna {"error": "<motivo>"}.
     """
     if not llm_disponible():
-        return {"error": "LLM_API_KEY / NVIDIA_API_KEY no configurada en variable de entorno ni st.secrets"}
+        return {"error": "Extracción por IA deshabilitada. Usa 'Importar JSON' en el panel de carga."}
 
     if not imagenes:
         return {"error": "No se recibieron imágenes"}
