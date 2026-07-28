@@ -535,6 +535,8 @@ def seccion_importar_json():
                 elif not datos_json["posts"]:
                     st.error("El JSON no contiene posts.")
                 else:
+                    # Externos usa el mismo contrato que Facebook (post + comentarios).
+                    # _aplicar_contrato() solo acepta "facebook" o "tiktok".
                     plat_extraccion = "facebook" if plataforma_post.lower() == "externos" else plataforma_post.lower()
                     nuevos_items = []
                     error_msg = None
