@@ -31,12 +31,12 @@ def verificar(path="data/analysis.json"):
     if resultado.es_publicable:
         print(f"OK: {path} es publicable ({len(resultado.errores)} advertencias)")
     else:
-        bloq = resultado.bloqueantes()
+        bloq = resultado.bloqueantes
         print(f"FALLO: {len(bloq)} error(es) bloqueante(s):")
         for e in bloq:
             print(f"  [{e.codigo}] {e.seccion}: {e.mensaje_humano}")
 
-    advs = resultado.advertencias()
+    advs = resultado.advertencias
     if advs:
         print(f"ADVERTENCIAS ({len(advs)}):")
         for e in advs:

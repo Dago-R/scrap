@@ -20,15 +20,15 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_neutral": 90.9,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "tono_score_hoy": 9.1,
+  "pct_favorable": 16.900000000000002,
+  "pct_neutral": 75.8,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "tono_score_hoy": 9.6,
   "tono_score_ayer": 0.0,
-  "tendencia": 9.1,
+  "tendencia": 9.6,
   "etiqueta_tendencia": "mejorando"
 }
 ```
@@ -57,69 +57,63 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "emocion_dominante": "civica_nueva_espana",
-  "pena_profunda": 0.0,
-  "distraccion": 0.0,
-  "aprension": 0.0,
-  "ira": 0.0,
-  "sorpresa": 0.0,
-  "melancolia": 0.0,
-  "ironia": 0.0,
-  "confianza": 0.0,
-  "indignacion": 0.0,
-  "pesimismo": 0.0,
-  "desaprobacion": 0.0,
-  "asombro": 0.0,
-  "indiferencia": 0.0,
-  "curiosidad": 0.0,
-  "serenidad": 0.0,
-  "satisfaccion": 0.0,
-  "panico": 0.0,
-  "desprecio": 0.0,
-  "vigilancia": 0.0,
-  "alerta_expectante": 0.0,
-  "agresividad": 0.0,
-  "calma": 0.0,
-  "amor_civico": 0.0,
-  "preocupacion": 0.0,
-  "aburrimiento": 0.0,
-  "alegria": 0.0,
-  "desagrado": 0.0,
-  "euforia": 0.0,
-  "admiracion": 0.0,
-  "indignacion_moral": 0.0,
-  "optimismo": 0.0,
-  "incredulidad": 0.0,
-  "fastidio": 0.0,
-  "objecion": 0.0,
-  "repulsion": 0.0,
-  "sumision": 0.0,
-  "culpa": 0.0,
-  "molestia": 0.0,
-  "terror": 0.0,
-  "esperanza": 0.0,
-  "remordimiento": 0.0,
-  "dolor": 0.0,
-  "ansiedad": 0.0,
-  "reclamo": 0.0,
-  "enojo": 0.0,
-  "interes": 0.0,
-  "furia": 0.0,
-  "aceptacion": 0.0,
-  "expectativa": 0.0,
-  "asombro_temeroso": 0.0,
-  "reconocimiento": 0.0,
-  "envidia": 0.0,
-  "tristeza": 0.0,
-  "civica_nueva_espana": 36.4,
-  "civica_nueva_ggoooolllll": 9.1,
-  "civica_nueva_jose": 9.1,
-  "civica_nueva_gabi": 9.1,
-  "civica_nueva_oleeee": 9.1,
-  "civica_nueva_mejor": 9.1,
-  "civica_nueva_sacrificio": 9.1,
-  "joy_nueva_gana": 9.1
+  "fecha_datos_hasta": "2026-08-04",
+  "emocion_dominante": "reconocimiento",
+  "fuente_plataformas": "facebook,externos",
+  "n_textos_analizados": 573,
+  "pct_aceptacion": 4.1,
+  "pct_molestia": 0.5,
+  "pct_sumision": 0.5,
+  "pct_distraccion": 1.8,
+  "pct_alerta_expectante": 0.0,
+  "pct_envidia": 0.0,
+  "pct_incredulidad": 1.8,
+  "pct_confianza": 9.0,
+  "pct_panico": 0.0,
+  "pct_furia": 4.1,
+  "pct_culpa": 0.5,
+  "pct_dolor": 1.4,
+  "pct_ansiedad": 0.0,
+  "pct_agresividad": 1.4,
+  "pct_desagrado": 0.9,
+  "pct_curiosidad": 0.0,
+  "pct_terror": 0.9,
+  "pct_amor_civico": 8.1,
+  "pct_asombro": 0.5,
+  "pct_optimismo": 0.5,
+  "pct_ironia": 0.0,
+  "pct_admiracion": 1.8,
+  "pct_enojo": 0.0,
+  "pct_melancolia": 0.5,
+  "pct_objecion": 0.0,
+  "pct_expectativa": 9.0,
+  "pct_desaprobacion": 0.0,
+  "pct_esperanza": 4.1,
+  "pct_repulsion": 0.9,
+  "pct_interes": 0.0,
+  "pct_pena_profunda": 0.0,
+  "pct_indiferencia": 1.4,
+  "pct_indignacion": 0.0,
+  "pct_ira": 0.0,
+  "pct_euforia": 12.7,
+  "pct_tristeza": 0.9,
+  "pct_aburrimiento": 0.0,
+  "pct_reconocimiento": 13.1,
+  "pct_fastidio": 0.0,
+  "pct_vigilancia": 5.9,
+  "pct_reclamo": 0.5,
+  "pct_desprecio": 0.5,
+  "pct_calma": 0.0,
+  "pct_preocupacion": 1.8,
+  "pct_satisfaccion": 0.5,
+  "pct_pesimismo": 0.0,
+  "pct_indignacion_moral": 2.3,
+  "pct_aprension": 1.4,
+  "pct_alegria": 5.4,
+  "pct_asombro_temeroso": 0.0,
+  "pct_sorpresa": 1.4,
+  "pct_serenidad": 0.5,
+  "pct_remordimiento": 0.0
 }
 ```
 
@@ -147,10 +141,10 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "vol_hoy": 4,
-  "promedio_semanal": 4,
-  "pct_diferencia": 0.0
+  "fecha_datos_hasta": "2026-08-04",
+  "vol_hoy": 1,
+  "promedio_semanal": 4.2,
+  "pct_diferencia": -76.2
 }
 ```
 
@@ -178,10 +172,10 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "hhi": 0.25,
-  "nivel": "fragmentado",
-  "top_tema": "tema_nuevo_ahi",
+  "fecha_datos_hasta": "2026-08-04",
+  "hhi": 0.475,
+  "nivel": "dominado",
+  "top_tema": "obras_servicios",
   "n_temas": 4
 }
 ```
@@ -210,8 +204,8 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "valor": 55.94,
+  "fecha_datos_hasta": "2026-08-04",
+  "valor": 48.45,
   "cuadrante": "LIDERAZGO"
 }
 ```
@@ -240,25 +234,157 @@ Eres el redactor de narrativas de analisis de comunicacion para un gobierno muni
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "engagement_rate": 303.0,
+  "fecha_datos_hasta": "2026-08-04",
+  "engagement_rate": 9.36,
   "engagement_rate_formula": "ER = (reacciones + comentarios + compartidos) / vistas * 100",
-  "engagementBasis": "per_post",
+  "engagementBasis": "ponderado_volumen",
   "er_externo": 0.0,
-  "er_externo_basis": "sin_datos",
-  "alcance_estimado": 0.0,
-  "reacciones_positivas": 228.0,
-  "reacciones_negativas": 55.0,
-  "reacciones_positivas_pct": 80.6,
-  "reacciones_negativas_pct": 19.4,
-  "ratio_amor_enojo": 4.15,
+  "er_externo_basis": "per_post",
+  "alcance_estimado": 39123.0,
+  "reacciones_positivas": 227.0,
+  "reacciones_negativas": 2.0,
+  "reacciones_positivas_pct": 99.1,
+  "reacciones_negativas_pct": 0.9,
+  "reacciones_neutras_pct": 0.0,
+  "total_reacciones_base": 229.0,
+  "ratio_amor_enojo": 113.5,
   "ratio_amor_enojo_formula": "R = (likes + loves + cares) / (angrys + sads + hahas)",
-  "net_sentiment_reacciones": 0.6092,
-  "controversy_reacciones": 0.1937,
-  "effectiveness_reacciones": 0.8028,
-  "aprobacion_pct_reacciones": 80.3,
-  "rechazo_pct_reacciones": 19.4,
+  "net_sentiment_reacciones": 0.9825,
+  "controversy_reacciones": 0.0087,
+  "effectiveness_reacciones": 0.9913,
+  "aprobacion_pct_reacciones": 99.1,
+  "rechazo_pct_reacciones": 0.9,
   "porque_funciona": ""
+}
+```
+
+---
+
+# b2.voz[0]
+
+## System Prompt
+
+```
+Redacta la narrativa para una voz de influencia en el analisis de comunicacion municipal. Describe su engagement y relevancia sin inventar cifras. No usar siglas tecnicas. Solo datos del periodo.
+- No calcules ni inventes ninguna cifra que no este en el JSON de contexto.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "pagina": "Sr. Navas",
+  "engagement": 280,
+  "reacciones_totales": 0,
+  "comentarios_totales": 280,
+  "compartidos_totales": 0
+}
+```
+
+---
+
+# b2.voz[1]
+
+## System Prompt
+
+```
+Redacta la narrativa para una voz de influencia en el analisis de comunicacion municipal. Describe su engagement y relevancia sin inventar cifras. No usar siglas tecnicas. Solo datos del periodo.
+- No calcules ni inventes ninguna cifra que no este en el JSON de contexto.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "pagina": "Prensa Santa Ana SV",
+  "engagement": 133,
+  "reacciones_totales": 0,
+  "comentarios_totales": 133,
+  "compartidos_totales": 0
+}
+```
+
+---
+
+# b2.voz[2]
+
+## System Prompt
+
+```
+Redacta la narrativa para una voz de influencia en el analisis de comunicacion municipal. Describe su engagement y relevancia sin inventar cifras. No usar siglas tecnicas. Solo datos del periodo.
+- No calcules ni inventes ninguna cifra que no este en el JSON de contexto.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "pagina": "Erick Mendoza",
+  "engagement": 126,
+  "reacciones_totales": 0,
+  "comentarios_totales": 126,
+  "compartidos_totales": 0
+}
+```
+
+---
+
+# b2.voz[3]
+
+## System Prompt
+
+```
+Redacta la narrativa para una voz de influencia en el analisis de comunicacion municipal. Describe su engagement y relevancia sin inventar cifras. No usar siglas tecnicas. Solo datos del periodo.
+- No calcules ni inventes ninguna cifra que no este en el JSON de contexto.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "pagina": "Abdali Adrian Alvarez",
+  "engagement": 9,
+  "reacciones_totales": 0,
+  "comentarios_totales": 9,
+  "compartidos_totales": 0
+}
+```
+
+---
+
+# b2.voz[4]
+
+## System Prompt
+
+```
+Redacta la narrativa para una voz de influencia en el analisis de comunicacion municipal. Describe su engagement y relevancia sin inventar cifras. No usar siglas tecnicas. Solo datos del periodo.
+- No calcules ni inventes ninguna cifra que no este en el JSON de contexto.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "pagina": "Equilibrio Legislativo",
+  "engagement": 2,
+  "reacciones_totales": 0,
+  "comentarios_totales": 2,
+  "compartidos_totales": 0
 }
 ```
 
@@ -279,9 +405,61 @@ Redacta la narrativa de polarizacion. Describe el nivel de division o consenso s
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "indice": 0.0,
-  "nivel": "consenso"
+  "fecha_datos_hasta": "2026-08-04",
+  "indice": 0.125,
+  "nivel": "confrontacion"
+}
+```
+
+---
+
+# b3.friccion[0]
+
+## System Prompt
+
+```
+Redacta la narrativa para un punto de friccion. Describe la tension especifica citando el tema, numero de criticas y emocion dominante. No inventar cifras.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "tema": "obras_servicios",
+  "zona": "",
+  "n_negativos": 8,
+  "n_comentarios_total": 13,
+  "pct_del_total": 61.5,
+  "emocion_dominante": "preocupacion"
+}
+```
+
+---
+
+# b3.friccion[1]
+
+## System Prompt
+
+```
+Redacta la narrativa para un punto de friccion. Describe la tension especifica citando el tema, numero de criticas y emocion dominante. No inventar cifras.
+
+```
+
+## Contexto (JSON)
+
+```json
+{
+  "periodo": "2026-07",
+  "fecha_datos_hasta": "2026-08-04",
+  "tema": "politica_electoral",
+  "zona": "",
+  "n_negativos": 1,
+  "n_comentarios_total": 1,
+  "pct_del_total": 100.0,
+  "emocion_dominante": "molestia"
 }
 ```
 
@@ -302,9 +480,9 @@ Redacta la narrativa para esta seccion del bloque de Riesgo y Autenticidad. Si h
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "pct_organico": 100.0,
-  "pct_coordinado": 0.0,
+  "fecha_datos_hasta": "2026-08-04",
+  "pct_organico": 74.8,
+  "pct_coordinado": 25.2,
   "n_duplicados": 0
 }
 ```
@@ -326,8 +504,8 @@ Redacta la narrativa para esta seccion del bloque de Riesgo y Autenticidad. Si h
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "proyeccion_24h": ""
+  "fecha_datos_hasta": "2026-08-04",
+  "proyeccion_24h": "Volumen estimado estable (+5.9% vs promedio 3d)"
 }
 ```
 
@@ -348,15 +526,15 @@ Redacta la narrativa del nivel de alerta general. Describe el semaforo de riesgo
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "pct_negativos": 0.0,
-  "indice_enojo_reacciones": 1.1,
-  "balance_confrontacion": 0.1937,
-  "n_temas_friccion": 0,
-  "tema_principal": "",
-  "emocion_principal": "",
+  "fecha_datos_hasta": "2026-08-04",
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "pct_negativos": 7.3,
+  "indice_enojo_reacciones": 0.0,
+  "balance_confrontacion": 0.0087,
+  "n_temas_friccion": 2,
+  "tema_principal": "obras_servicios",
+  "emocion_principal": "preocupacion",
   "alertas_cambridge": [],
   "formula_riesgo": "RR = clamp((max_topic_controversy * 0.50 + nsi_deviation * 0.50) * vol_factor, 0, 1)  [decisión H5: sin factor *10]"
 }
@@ -386,19 +564,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "eco_historico",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -426,19 +607,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "leccion_aprendida",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -466,19 +650,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "brecha_percepcion_realidad",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -506,19 +693,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "contexto_no_visible",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -546,19 +736,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "correlacion_contenido_reaccion",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -586,19 +779,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "comparativa_sectorial",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -626,19 +822,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "proyeccion_escenario",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 
@@ -666,19 +865,22 @@ Eres el estratega que redacta el Memorandum Estrategico (Bloque IV) del analisis
 ```json
 {
   "periodo": "2026-07",
-  "fecha_datos_hasta": "2026-07-24",
+  "fecha_datos_hasta": "2026-08-04",
   "seccion": "recomendacion_estrategica",
   "tono_dominante": "neutral",
-  "pct_favorable": 9.1,
-  "pct_critico": 0.0,
-  "n_total_comentarios": 11,
-  "emocion_dominante": "civica_nueva_espana",
-  "top_tema": "tema_nuevo_ahi",
-  "hhi": 0.25,
-  "engagement_rate": 303.0,
-  "semaforo": "amarillo",
-  "indice_riesgo": 34.7,
-  "temas_friccion": []
+  "pct_favorable": 16.900000000000002,
+  "pct_critico": 7.3,
+  "n_total_comentarios": 603,
+  "emocion_dominante": "reconocimiento",
+  "top_tema": "obras_servicios",
+  "hhi": 0.475,
+  "engagement_rate": 9.36,
+  "semaforo": "verde",
+  "indice_riesgo": 25.8,
+  "temas_friccion": [
+    "obras_servicios",
+    "politica_electoral"
+  ]
 }
 ```
 

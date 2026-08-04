@@ -519,7 +519,12 @@ def get_externos_stats(db_path=None):
 def get_external_page_engagement(db_path=None):
     """Retorna engagement por pagina externa desde external_pages + external_posts.
 
-    Retorna lista de dicts: [{page_name, posts, total_reactions, comments_count, engagement}].
+    Retorna lista de dicts:
+      [{page_name, posts, total_reactions, comments_count_meta, scraped_comments, engagement}].
+
+    comments_count_meta: SUM(external_posts.comments_count) = número que FB reporta.
+    scraped_comments:    COUNT(external_comments) = comentarios realmente scrapeados.
+    El campo 'comentarios_totales' en voces usa scraped_comments.
     """
     db_path = db_path or _cfg.EXTERNOS_DB
     conn = _conn(db_path)
@@ -528,22 +533,25 @@ def get_external_page_engagement(db_path=None):
             "SELECT p.name, "
             "  COUNT(DISTINCT po.post_id) as posts, "
             "  SUM(COALESCE(po.total_reactions,0)) as total_reactions, "
-            "  SUM(COALESCE(po.comments_count,0)) as comments_count "
+            "  SUM(COALESCE(po.comments_count,0)) as comments_count_meta, "
+            "  COUNT(ec.comment_id) as scraped_comments "
             "FROM external_pages p "
             "LEFT JOIN external_posts po ON po.page_name = p.name "
+            "LEFT JOIN external_comments ec ON ec.post_id = po.post_id "
             "GROUP BY p.name "
-            "ORDER BY total_reactions + comments_count DESC"
+            "ORDER BY total_reactions + COUNT(ec.comment_id) DESC"
         ).fetchall()
         result = []
         for r in rows:
             tr = r["total_reactions"] or 0
-            cc = r["comments_count"] or 0
+            sc = r["scraped_comments"] or 0
             result.append({
                 "page_name": r["name"],
                 "posts": r["posts"] or 0,
                 "total_reactions": tr,
-                "comments_count": cc,
-                "engagement": tr + cc,
+                "comments_count_meta": r["comments_count_meta"] or 0,
+                "scraped_comments": sc,
+                "engagement": tr + sc,
             })
         return result
     finally:

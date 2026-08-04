@@ -466,7 +466,7 @@ _EMO_DEFS = [
 def _render_emociones_barras(ie, show_caption=True):
     """Renderiza 10 barras horizontales de emociones."""
     for emo, label, color in _EMO_DEFS:
-        pct = _n(ie.get(f"pct_{emo}", 0)) if isinstance(ie, dict) else 0.0
+        pct = _n(ie.get(f"pct_{emo}", ie.get(emo, 0))) if isinstance(ie, dict) else 0.0
         n_abs = ie.get(emo, 0) if isinstance(ie, dict) else 0
         st.markdown(f"""
         <div class="bar-row">
@@ -541,10 +541,13 @@ with tab_pulso:
     # ── 02 · Índice de Emociones ───────────────────────────────────────
     st.markdown('<div class="section-header"><div class="section-title">02 · Índice de Emociones</div></div>', unsafe_allow_html=True)
     ie = b1.get("indice_emociones", {})
-    has_data = ie and any(ie.get(f"pct_{e}", 0) for e, _, _ in _EMO_DEFS)
+    # Soporte de retrocompatibilidad: acepta claves "pct_euforia" y "euforia"
+    def _get_pct_emo(ie_dict, emo_key):
+        return ie_dict.get(f"pct_{emo_key}", ie_dict.get(emo_key, 0))
+    has_data = ie and any(_get_pct_emo(ie, e) for e, _, _ in _EMO_DEFS)
     if has_data:
         emo_dom = safe_text(ie.get("emocion_dominante", "—"))
-        emos_ordenadas = sorted(_EMO_DEFS, key=lambda t: ie.get(f"pct_{t[0]}", 0), reverse=True)
+        emos_ordenadas = sorted(_EMO_DEFS, key=lambda t: _get_pct_emo(ie, t[0]), reverse=True)
 
         st.session_state.setdefault("b1_emo_activa", emos_ordenadas[0][0])
         emo_activa = st.session_state["b1_emo_activa"]
@@ -552,7 +555,7 @@ with tab_pulso:
         e, label, color = next(
             t for t in emos_ordenadas if t[0] == emo_activa
         )
-        pct = _n(ie.get(f"pct_{e}", 0))
+        pct = _n(_get_pct_emo(ie, e))
 
         st.markdown(f"""
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
@@ -616,7 +619,7 @@ with tab_pulso:
         st.radio(
             "Seleccionar emoción",
             options=[e for e, _, _ in emos_ordenadas],
-            format_func=lambda e: f"{emo_labels[e]} {_n(ie.get(f'pct_{e}',0)):.1f}% ({_n(ie.get(e,0)):.0f})",
+            format_func=lambda e: f"{emo_labels[e]} {_n(_get_pct_emo(ie, e)):.1f}% ({_n(ie.get(e,0)):.0f})",
             key="b1_emo_activa",
             horizontal=True,
             label_visibility="collapsed",
@@ -624,7 +627,7 @@ with tab_pulso:
 
         narrativa_ie = safe_text(_get(ie, "narrativa", default="—"))
         _emo_top3 = sorted(
-            [(l, _n(ie.get(f"pct_{c}", 0))) for c, l, _ in _EMO_DEFS],
+            [(l, _n(_get_pct_emo(ie, c))) for c, l, _ in _EMO_DEFS],
             key=lambda x: x[1], reverse=True,
         )[:3]
         _evidencia_ie = [f"Emoción dominante: {emo_dom}"]

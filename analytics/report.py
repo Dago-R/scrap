@@ -195,14 +195,30 @@ def construir_analysis(aprobaciones_agrupadas: list,
         meta["total_reacciones_sumadas"] += n(externos_stats.get("total_reactions", 0))
 
     # ── 16.1: Índice de emociones por reglas léxicas ──
+    # NOTA: El índice usa solo comentarios de fuentes externas (externos.db)
+    # porque TikTok contiene contenido deportivo/festivo que distorsiona
+    # el análisis político. FB se incluye porque es institucional.
+    # Se excluye TikTok del índice emocional cuando hay datos de externos.
     if comentarios_texts:
-        emo_agg = aggregate_emotions(comentarios_texts, es_oficial=es_oficial)
+        # Separar textos por plataforma si hay contexto disponible
+        if comentarios_con_contexto:
+            textos_sin_tiktok = [
+                ctx["texto"]
+                for ctx in comentarios_con_contexto
+                if ctx.get("plataforma") != "tiktok" and ctx.get("texto")
+            ]
+            textos_para_emo = textos_sin_tiktok if textos_sin_tiktok else comentarios_texts
+        else:
+            textos_para_emo = comentarios_texts
+        emo_agg = aggregate_emotions(textos_para_emo, es_oficial=es_oficial)
         indice_emociones = {
             "emocion_dominante": emo_agg["dominante"],
             "narrativa": "",
             "enlaces_referencia": [],
+            "fuente_plataformas": "facebook,externos" if comentarios_con_contexto else "todos",
+            "n_textos_analizados": len(textos_para_emo),
         }
-        indice_emociones.update(emo_agg["pct"])
+        indice_emociones.update({f"pct_{k}": v for k, v in emo_agg["pct"].items()})
     else:
         emo_global = {}
         for t in aprobaciones_agrupadas:
@@ -214,7 +230,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "narrativa": "",
             "enlaces_referencia": [],
         }
-        indice_emociones.update(pcts_global)
+        indice_emociones.update({f"pct_{k}": v for k, v in pcts_global.items()})
 
     # ── 16.2: Clasificación temática ──
     topic_results_by_text: dict[int, TopicResult] = {}
@@ -617,7 +633,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
                         ),
                         "engagement": ep.get("engagement", 0),
                         "reacciones_totales": ep.get("total_reactions", 0),
-                        "comentarios_totales": ep.get("comments_count", 0),
+                        "comentarios_totales": ep.get("scraped_comments", 0),
                         "compartidos_totales": 0,
                         "narrativa": "",
                         "enlaces_referencia": [],
@@ -675,13 +691,20 @@ def construir_analysis(aprobaciones_agrupadas: list,
         }
 
     temas_emergentes_lda = []
-    for e in emergentes_result.get("emergentes", []):
+    _emergentes_raw = emergentes_result.get("emergentes", [])
+    _total_emergentes_n = sum(e.get("frecuencia_actual", 0) for e in _emergentes_raw) or 1
+    _n_textos_total = len(comentarios_texts) if comentarios_texts else 1
+    for e in _emergentes_raw:
+        freq = e.get("frecuencia_actual", 0)
         temas_emergentes_lda.append({
             "tema": e["ngrama"],
-            "n_comentarios": e["frecuencia_actual"],
+            "n_comentarios": freq,
+            "peso": round(freq / _total_emergentes_n, 4),
+            "pct_del_total": round(freq / _n_textos_total * 100, 1),
             "tendencia": e["tendencia"],
             "acelerando": e["tendencia"] == "acelerando",
             "pct_cambio_semana": e["ratio"],
+            "frecuencia_previa": e.get("frecuencia_previa", 0),
             "narrativa": "",
         })
 
