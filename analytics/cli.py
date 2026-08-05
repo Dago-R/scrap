@@ -82,6 +82,7 @@ def cmd_generar(args):
         get_fb_monthly_theme_controversy,
         get_fb_monthly_er, get_tk_monthly_er,
         get_fb_monthly_nsi, get_fb_period_controversy,
+        get_fb_comments_emotion_by_zone,
     )
 
     # Combinar aprobaciones de las 3 DBs (clasificación automática)
@@ -195,6 +196,11 @@ def cmd_generar(args):
         fb_anger_by_zone = get_fb_anger_by_zone()
     except Exception:
         pass
+    fb_comments_emotion_by_zone = None
+    try:
+        fb_comments_emotion_by_zone = get_fb_comments_emotion_by_zone()
+    except Exception:
+        pass
     try:
         fb_monthly_controversy = get_fb_monthly_controversy()
     except Exception:
@@ -252,6 +258,7 @@ def cmd_generar(args):
         fb_posts_with_sentiment=fb_posts_with_sentiment,
         fb_controversial_posts=fb_controversial_posts,
         fb_anger_by_zone=fb_anger_by_zone,
+        fb_comments_emotion_by_zone=fb_comments_emotion_by_zone,
         fb_monthly_controversy=fb_monthly_controversy,
         fb_monthly_theme_controversy=fb_monthly_theme_controversy,
     )

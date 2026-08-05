@@ -1,251 +1,27 @@
-"""
-Patch para analytics/emotion.py — EMOTION_LEXICON
-Amplía la cobertura de vocabulario deportivo y festivo en cuatro categorías.
-
-INSTRUCCIONES DE APLICACIÓN:
-Fusionar cada bloque de semillas con el set existente en EMOTION_LEXICON.
-El matcher normaliza acentos antes de comparar, así que se puede escribir
-con o sin tilde — se usa consistencia con el estilo del léxico existente.
-
-Recuerda: el match de una palabra sola es EXACTO por token.
-"gol" matchea "gol" pero NO "goles", "golazo", "goool".
-Cada variante necesita su propia entrada si se quiere cubrir.
-Las frases con espacio se buscan como substring del texto normalizado.
-"""
-
-# ─────────────────────────────────────────────
-# 1. euforia — celebración intensa, vocabulario de gol y victoria
-#    Hoy solo tiene: euforico, euforia, increible, emocionado/a,
-#    espectacular, brutal, brutalisimo, desbordado/a, extremo/a,
-#    gloria, triple, wow, wao, genialisimo, fantastico
-# ─────────────────────────────────────────────
-EUFORIA_NUEVAS = {
-    # Gol y sus variantes ortográficas/enfáticas
-    "gol",
-    "goles",
-    "golazo",
-    "goool",
-    "gooool",
-    "goooool",
-    "gooooool",
-
-    # Victoria y campeonato
-    "victoria",
-    "victorias",
-    "campeon",
-    "campeones",
-    "campeona",
-    "campeonas",
-    "campeonato",
-    "titulo",
-    "titulos",
-    "trofeo",
-    "copa",
-
-    # Celebración activa
-    "celebrando",
-    "celebracion",
-    "festejando",
-    "festejo",
-    "fiesta",
-    "fiestas",
-    "ganamos",
-    "ganaron",
-    "ganaste",
-    "ganaron",
-    "lo logramos",          # frase multi-palabra (substring)
-    "lo hicieron",          # frase multi-palabra
-    "que golazo",           # frase multi-palabra
-    "que campeon",          # frase multi-palabra
-    "que campeones",        # frase multi-palabra
-
-    # Vivas y exclamaciones de triunfo
-    "viva",
-    "vivan",
-    "arriba",
-    "ole",
-    "olee",
-    "oleee",
-    "oleeee",
-    "eso es",               # frase multi-palabra
-    "asi se hace",          # frase multi-palabra
-    "asi se gana",          # frase multi-palabra
-
-    # Equipos y selección (contexto español/centroamericano)
-    "espana",               # normalizado sin tilde; matchea "españa"
-    "la roja",              # frase multi-palabra
-    "la seleccion",         # frase multi-palabra
-    "la furia",             # frase multi-palabra (La Furia Roja)
-
-    # Jugadores por nombre de pila frecuentes en comentarios SV
-    # (solo los que generaron propuestas en este post)
-    "yamal",
-    "gabi",
-    "pedri",
-    "morata",
-    "jose",                 # cubre "jose" en contexto de gol/euforia
-                            # NOTA: "jose" es ambiguo fuera de contexto deportivo;
-                            # monitorear si genera falsos positivos en otros posts.
+{
+  "b1.clima_narrativo": "Sobre 603 comentarios del período 2026-07, con datos hasta el 2026-08-04, la clasificación por reglas léxicas deja 16.9% de comentarios favorables, 75.8% neutrales y 7.3% críticos, con tono dominante neutral y un saldo neto de tono de 9.6 sobre 100.\nLa comparación exacta contra el registro previo es de +9.6 puntos, porque ese registro previo era 0.0: la variación se mide contra una base sin saldo neto acumulado, no contra un período con carga favorable o crítica ya establecida.\nEsta sección no recibe desglose por tema, así que no hay datos suficientes para atribuir un tema concreto al apoyo ni a la crítica de este período.\nConclusión: el período no está definido por el respaldo activo (16.9%) ni por el rechazo (7.3%), sino por una mayoría que participa sin carga evaluativa (75.8%), un piso frágil porque cualquier tema con volumen puede moverlo en cualquier dirección.\n= MAYORÍA NEUTRAL, CRÍTICA CONTENIDA",
+  "b1.indice_emociones": "Sobre 573 textos del período 2026-07 clasificados por reglas léxicas en Facebook y Externos, la emoción dominante es reconocimiento con 13.1%, seguida de euforia con 12.7%, confianza con 9.0%, expectativa con 9.0% y amor cívico con 8.1%.\nDel lado adverso, la carga más alta es furia con 4.1%, seguida de indignación moral con 2.3% y de preocupación, incredulidad y distracción con 1.8% cada una; enojo, ira, indignación y desaprobación quedan en 0.0%.\nLa vigilancia —atención sostenida sin veredicto— pesa 5.9%, por encima de cualquier emoción crítica individual del período.\nEl contexto declara como fuente únicamente Facebook y Externos, por lo que estas cifras no incorporan TikTok: es una limitación metodológica de cobertura y no un dato de ausencia de emoción en esa plataforma.\nConclusión: la conversación reconoce y celebra más de lo que reclama, y la molestia registrada está concentrada en furia (4.1%) sin escalar a ira ni a indignación abierta, lo que ubica el reclamo en un punto todavía respondible.\n= RECONOCIMIENTO SOBRE FURIA AISLADA",
+  "b1.intensidad": "El volumen del último día medido del período 2026-07 cierra en 1, frente a un promedio semanal de 4.2. La diferencia exacta contra ese promedio es de -76.2%.\nEl contexto no trae desglose por plataforma ni por tema para ese día, así que no hay datos suficientes para atribuir la caída a un tema concreto.\nConclusión: el último día no sostiene el ritmo de la semana, y cualquier lectura de tono construida sobre ese día descansa en un volumen de 1: para decidir conviene usar el acumulado del período, no el dato diario.\n= RITMO DIARIO EN MÍNIMO",
+  "b1.concentracion_tematica": "La agenda del período 2026-07 se reparte entre 4 temas y el índice de concentración cierra en 0.475, un nivel clasificado como dominado. El tema de mayor peso es obras y servicios.\nEl contexto no incluye el porcentaje de participación de cada uno de esos 4 temas, así que el peso exacto de obras y servicios dentro del total no puede afirmarse en esta sección sin inventarlo.\nConclusión: con 4 temas en circulación y una concentración de 0.475, la conversación del período depende de una sola línea de asuntos, y el signo de obras y servicios arrastra al clima del período completo.\n= AGENDA DOMINADA: OBRAS Y SERVICIOS",
+  "b1.pulso_iq": "El índice general del período 2026-07 cierra en 48.45 puntos y el análisis lo ubica en el cuadrante LIDERAZGO.\nEl contexto de esta sección no incluye el desglose por dimensiones, ni los umbrales que definen cada cuadrante, ni un valor de referencia anterior: con esos datos ausentes no puede explicarse aquí de qué componentes surge el 48.45, ni afirmarse si subió o bajó, ni justificarse la etiqueta del cuadrante.\nConclusión: el 48.45 es publicable como referencia del período, pero la etiqueta que lo acompaña no queda sustentada por los datos que llegan a esta sección y no debería usarse como argumento por sí sola.\n= 48.45 SIN DESGLOSE VERIFICABLE",
+  "b1.metricas_rendimiento": "La tasa de interacción del período 2026-07 es de 9.36%, calculada con ponderación por volumen, y el alcance estimado es de 39,123 vistas: son dos cosas distintas —las vistas miden exposición y la tasa mide participación— y no deben leerse como equivalentes.\nSobre una base de 229 reacciones clasificadas, 227 son positivas (99.1%) y 2 son negativas (0.9%), sin reacciones neutras; la proporción entre reacciones de afecto y reacciones de molestia es de 113.5 a 1, y el nivel de confrontación medido sobre reacciones queda en 0.0087.\nLa tasa de interacción de las fuentes externas aparece en 0.0%, medida por publicación: el contexto no indica si eso significa cero interacciones registradas o ausencia del dato de vistas en esa fuente, y no debe presentarse como desempeño nulo sin esa verificación.\nEl campo que explica por qué funciona el contenido llega vacío, así que esta sección no atribuye el resultado a ningún formato ni publicación concreta.\nConclusión: el resultado del período se sostiene en un volumen pequeño de reacciones (229) con signo casi unánime; la fortaleza medible es la ausencia de rechazo (0.9%), no la escala.\n= 229 REACCIONES, RECHAZO CASI NULO",
+  "b2.voz[0]": "En el período 2026-07, la cuenta Sr. Navas concentra 280 interacciones y las 280 son comentarios: 0 reacciones y 0 compartidos registrados. Su relevancia en el período viene del volumen de conversación que reúne, no de la difusión: sin compartidos registrados, el análisis no puede atribuirle propagación del mensaje. El contexto no incluye postura ni sentimiento por comentario para esta cuenta, así que no se le asigna una posición favorable ni crítica, y tampoco aclara si esos 0 son ausencia real de reacciones y compartidos o datos que la fuente no provee.",
+  "b2.voz[1]": "Prensa Santa Ana SV registra 133 interacciones en el período 2026-07, todas en forma de comentarios, con 0 reacciones y 0 compartidos. Su aporte medible es conversación, no difusión: no hay compartidos registrados que permitan hablar de propagación. El contexto no trae postura ni sentimiento por comentario, así que no se le atribuye una posición favorable ni crítica; los 0 en reacciones y compartidos pueden ser ausencia real o datos no provistos por la fuente, y el contexto no lo distingue.",
+  "b2.voz[2]": "Erick Mendoza reúne 126 interacciones en el período 2026-07, todas comentarios, con 0 reacciones y 0 compartidos registrados. Toda su actividad medida es conversación en comentarios; sin compartidos en el contexto, no puede atribuírsele difusión del mensaje. Tampoco llega postura ni sentimiento por comentario, así que no se le asigna una posición favorable ni crítica.",
+  "b2.voz[3]": "Abdali Adrian Alvarez registra 9 interacciones en el período 2026-07, las 9 en comentarios, con 0 reacciones y 0 compartidos. Con 9 registros, el volumen es demasiado pequeño para sostener una lectura de influencia o de tendencia: es presencia registrada, no peso en la conversación del período. El contexto no incluye postura ni sentimiento por comentario, así que no se le atribuye posición favorable ni crítica.",
+  "b2.voz[4]": "Equilibrio Legislativo registra 2 interacciones en el período 2026-07, ambas comentarios, con 0 reacciones y 0 compartidos. Con 2 registros no hay base para hablar de influencia ni de postura: aparece en el listado por trazabilidad del dato, no por peso en la conversación. El contexto no incluye postura ni sentimiento por comentario para esta cuenta.",
+  "b2.polarizacion": "El índice de polarización del período 2026-07 es de 0.125 y el análisis lo clasifica en el nivel confrontación.\nEl contexto no incluye los umbrales que separan un nivel de otro ni el valor del período anterior, así que no puede explicarse aquí por qué 0.125 recibe esa etiqueta ni afirmarse si la división creció o se redujo.\nCon el dato disponible, la distancia entre quienes apoyan y quienes critican queda registrada en 0.125, y el análisis no aporta evidencia de dos bloques de tamaño comparable enfrentados durante el período. La ausencia de umbrales documentados en este contexto es una limitación metodológica que conviene cerrar antes de publicar la etiqueta.\nConclusión: la cifra describe una brecha acotada y la etiqueta que la acompaña exige revisión, porque el valor que la sostiene (0.125) no la explica por sí mismo.\n= BRECHA ACOTADA, ETIQUETA SIN UMBRAL",
+  "b3.friccion[0]": "De 13 comentarios sobre obras y servicios en el período 2026-07, 8 son negativos: 61.5% del total de ese tema. La emoción dominante en esa fricción es preocupación, no enojo ni indignación.\nEl campo de zona llega vacío, así que no hay datos suficientes para localizar el reclamo en un lugar concreto del municipio.\nConclusión: la crítica sobre obras y servicios es mayoritaria dentro del tema (61.5%) y está planteada en clave de preocupación, un registro que todavía admite respuesta informativa —estado, plazo y responsable— antes de escalar a rechazo.\n= PREOCUPACIÓN POR OBRAS Y SERVICIOS",
+  "b3.friccion[1]": "Política electoral registra 1 comentario en el período 2026-07 y ese único comentario es negativo: 100.0% del tema. La emoción dominante es molestia.\nCon 1 comentario, el porcentaje no describe una tendencia sino un caso aislado; el campo de zona llega vacío, así que tampoco hay ubicación atribuible.\nConclusión: el 100.0% de este tema es efecto del tamaño de la muestra (1 comentario) y no debe presentarse junto a los porcentajes de temas con volumen como si midiera lo mismo.\n= UN COMENTARIO, NO TENDENCIA",
+  "b3.autenticidad": "El período 2026-07 cierra con 74.8% de la actividad clasificada como orgánica y 25.2% como coordinada, con 0 comentarios duplicados detectados.\nLos dos datos juntos delimitan la lectura: si no hay textos repetidos, ese 25.2% no proviene de mensajes copiados entre cuentas. El contexto no indica de qué señal se deriva el porcentaje ni identifica cuentas, fechas o publicaciones asociadas, así que no hay datos suficientes para señalar un actor coordinado concreto; sostenerlo con este contexto sería pasar por alto una limitación metodológica.\nConclusión: el período no muestra evidencia de contenido replicado, y el 25.2% debe presentarse como irregularidad a revisar, nunca como campaña identificada.\n= CERO DUPLICADOS, 25.2% SIN EXPLICAR",
+  "b3.velocidad_propagacion": "La proyección a 24 horas del período 2026-07 es de volumen estable, con +5.9% frente al promedio de los últimos 3 días.\nEs el único dato de propagación que llega a esta sección: no hay velocidad por tema, ni temas acelerando o desacelerando, ni volumen por día que permita describir cómo se mueve la conversación.\nConclusión: con una sola cifra de proyección y sin temas identificados detrás, esta sección solo autoriza una lectura de continuidad para las próximas 24 horas, no una alerta de propagación.\n= CONTINUIDAD SIN TEMA IDENTIFICADO",
+  "b3.nivel_alerta": "El semáforo del período 2026-07 está en verde, con índice de riesgo de 25.8 y 7.3% de comentarios negativos. No hay ninguna alerta activa registrada en el período.\nLas reacciones de molestia quedan en 0.0 y el balance de confrontación en 0.0087: son ejes distintos del porcentaje de comentarios críticos y no deben compararse entre sí como si midieran lo mismo.\nHay 2 temas de fricción activos, con obras y servicios como principal y preocupación como emoción dominante.\nConclusión: el riesgo del período es bajo (25.8) y está localizado en 2 temas, uno de ellos con nombre propio, de modo que la vigilancia debe concentrarse en obras y servicios y no en el nivel general.\n= VERDE CON FOCO EN OBRAS",
+  "b4.eco_historico": "Este contexto solo trae datos del período 2026-07: 603 comentarios, 16.9% favorables, 7.3% críticos, tono dominante neutral, reconocimiento como emoción dominante y semáforo verde con índice de riesgo en 25.8.\nNo llega ninguna cifra de períodos anteriores, así que no puede afirmarse que este patrón ya haya ocurrido antes ni medirse cuánto se repite: cualquier eco histórico sería inventado.\nLo que queda registrado como antecedente para futuras comparaciones es el par que define el período: obras y servicios como tema principal y, al mismo tiempo, uno de los 2 temas de fricción, junto con política electoral.\nConclusión: 2026-07 debe archivarse como línea base verificable —603 comentarios, 16.9% favorable, 7.3% crítico, riesgo 25.8, concentración de agenda 0.475— porque sin ese registro la siguiente medición tampoco tendrá contra qué compararse.\n= LÍNEA BASE SIN HISTORIAL PREVIO",
+  "b4.leccion_aprendida": "La lección del período 2026-07 está en la coincidencia entre dos datos del mismo análisis: obras y servicios es el tema principal de una agenda con concentración de 0.475 y es también uno de los 2 temas de fricción registrados.\nEl período combina reconocimiento como emoción dominante y 16.9% de comentarios favorables sobre 603 comentarios, con 7.3% de comentarios críticos: el respaldo no desplaza al reclamo, convive con él en el mismo tema.\nConclusión: cuando un solo tema concentra la agenda y la fricción, el resultado favorable depende de ese tema, y la lección operativa es que obras y servicios no puede comunicarse solo como logro —cada publicación de ese tema recibe también el reclamo, y ahí debe estar preparada la respuesta.\n= OBRAS Y SERVICIOS: DOBLE FILO",
+  "b4.brecha_percepcion_realidad": "Del lado de la percepción, el período 2026-07 registra 603 comentarios, 16.9% favorables, 7.3% críticos, tono dominante neutral, reconocimiento como emoción dominante y semáforo verde con riesgo en 25.8.\nDel lado de la gestión —obra ejecutada, plazos cumplidos, cobertura de servicio— este contexto no aporta ningún dato, así que la brecha no puede cuantificarse: afirmar que la percepción va por detrás o por delante de la ejecución sería inventarlo.\nLo único identificable es dónde se jugaría esa brecha: obras y servicios, tema principal del período y uno de los 2 temas de fricción junto con política electoral.\nConclusión: la brecha queda planteada como verificación pendiente —contrastar el 7.3% de crítica con los indicadores propios de obras y servicios— y no como hallazgo, porque un análisis de conversación no contiene datos de ejecución.\n= BRECHA NO MEDIBLE, FOCO CLARO",
+  "b4.contexto_no_visible": "El período 2026-07 se apoya en 603 comentarios de conversación pública, con tono dominante neutral, 16.9% favorables y 7.3% críticos.\nLo que ese conjunto no captura queda fuera de toda cifra disponible: quien lee sin comentar, quien no usa estas plataformas y quien plantea su reclamo en ventanilla, por teléfono o en la calle no aparece en ningún indicador del período. Este contexto no incluye encuestas, registros de atención ciudadana ni cobertura de medios que permitan estimar ese tramo, y esa es una limitación metodológica de alcance, no un vacío de opinión.\nConclusión: con una agenda concentrada en 0.475 alrededor de obras y servicios, el análisis describe con precisión la conversación visible sobre ese tema, pero no autoriza a hablar en nombre de quien no participó en ella.\n= CONVERSACIÓN VISIBLE, NO OPINIÓN TOTAL",
+  "b4.correlacion_contenido_reaccion": "El período 2026-07 cierra con una tasa de interacción de 9.36% sobre 603 comentarios, reconocimiento como emoción dominante y obras y servicios como tema principal.\nEste contexto no incluye desempeño publicación por publicación —ni formato, ni fecha, ni interacción individual—, así que no puede afirmarse qué tipo de contenido produjo qué reacción: la correlación entre contenido y respuesta no está calculada en estos datos.\nLo que sí queda establecido es el marco: el tema que domina la agenda (concentración de 0.475) es también uno de los 2 temas de fricción, de modo que el contenido de mayor volumen y el de mayor riesgo son el mismo.\nConclusión: para atribuir resultados a contenidos concretos hace falta el detalle por publicación, que este análisis no trae; con los datos del período solo puede afirmarse que la respuesta se concentra donde se concentra el contenido.\n= SIN DETALLE POR PUBLICACIÓN",
+  "b4.comparativa_sectorial": "El período 2026-07 registra una tasa de interacción de 9.36%, con 16.9% de comentarios favorables y 7.3% críticos sobre 603 comentarios, semáforo verde y riesgo en 25.8.\nEste contexto no incluye ninguna referencia externa —ni otras municipalidades, ni promedios del sector, ni valores de períodos anteriores de este mismo panel—, así que no hay base para afirmar si esas cifras están por encima o por debajo de un estándar: cualquier comparación sectorial aquí sería inventada.\nConclusión: las cifras del período solo pueden compararse contra sí mismas, y hasta que exista una referencia cargada en el análisis, el 9.36% y el 16.9% deben presentarse como valores propios, sin juicio de posición relativa.\n= SIN REFERENCIA EXTERNA COMPARABLE",
+  "b4.proyeccion_escenario": "El punto de partida es el cierre del período 2026-07: 603 comentarios, 16.9% favorables, 7.3% críticos, tono dominante neutral, reconocimiento como emoción dominante, riesgo en 25.8 y semáforo verde.\nEste contexto no incluye serie temporal ni valores previos, así que el escenario no puede proyectarse a partir de una tendencia medida; solo puede plantearse en términos condicionales sobre los 2 temas de fricción registrados: obras y servicios y política electoral.\nSi la crítica crece por encima del 7.3% actual y lo hace por obras y servicios mientras la agenda mantiene una concentración de 0.475, el verde tiene poco margen para absorberlo, porque no hay otros temas que repartan la conversación.\nConclusión: el escenario más probable no puede afirmarse con estos datos; lo que sí puede afirmarse es que el riesgo del próximo período pasa por un solo tema, y que sostener el semáforo verde depende de la respuesta que reciba obras y servicios.\n= VERDE DEPENDIENTE DE UN TEMA",
+  "b4.recomendacion_estrategica": "Recomendación única para el cierre del período 2026-07: responder públicamente sobre obras y servicios, tema principal del período y uno de los 2 temas de fricción registrados junto con política electoral.\nLa justificación está en las cifras del propio período: 7.3% de comentarios críticos sobre 603 comentarios, concentración de agenda en 0.475 y riesgo en 25.8 con semáforo verde, es decir margen para actuar antes de que el reclamo crezca, no después.\nLa forma concreta: publicar estado, plazo y responsable de las intervenciones de obras y servicios ya anunciadas, en la misma superficie donde se recibieron los comentarios críticos y no en un canal aparte.\nConclusión: con reconocimiento como emoción dominante y 16.9% de comentarios favorables, este es el momento con mejores condiciones del período para dar una respuesta verificable sobre el único tema que concentra a la vez la agenda y la fricción.\n= RESPONDER OBRAS Y SERVICIOS AHORA"
 }
-
-# ─────────────────────────────────────────────
-# 2. alegria — celebración moderada, júbilo colectivo
-#    Hoy tiene: alegre, alegria, feliz, contento/a, gozo,
-#    encantado/a, disfruto, gustoso/a, satisfecho/a,
-#    bienestar, regocijo, sonrisa, divertido/a
-# ─────────────────────────────────────────────
-ALEGRIA_NUEVAS = {
-    # Júbilo colectivo moderado
-    "que alegria",          # frase multi-palabra
-    "que bonito",           # frase multi-palabra
-    "que lindo",            # frase multi-palabra
-    "que bien",             # frase multi-palabra
-    "muy bien",             # frase multi-palabra
-    "que bueno",            # frase multi-palabra
-    "que rico",             # frase multi-palabra (uso coloquial SV: "qué rico verlos ganar")
-    "me alegra",            # frase multi-palabra
-    "me alegro",
-    "que emocion",          # frase multi-palabra
-    "emocion",
-    "emocionante",
-    "lindo",
-    "lindos",
-    "linda",
-    "lindas",
-    "hermoso",
-    "hermosa",
-    "bonito",
-    "bonita",
-    "precioso",
-    "preciosa",
-    "disfrutando",
-    "disfrutamos",
-    "gozando",
-    "gozamos",
-    "vamos",                # "vamos" celebratorio (ambiguo pero mayoritariamente positivo en SV)
-    "animo",
-    "fuerza",
-    "adelante",
-    "que noche",            # frase multi-palabra (contexto: noche del partido)
-    "que partido",          # frase multi-palabra
-    "que tarde",            # frase multi-palabra (contexto: tarde del partido)
-    "lograron",
-    "lo lograron",          # frase multi-palabra
-    "gran partido",         # frase multi-palabra
-    "gran noche",           # frase multi-palabra
-    "bien jugado",          # frase multi-palabra
-    "bien hecho",           # frase multi-palabra
-}
-
-# ─────────────────────────────────────────────
-# 3. amor_civico — identidad comunitaria y orgullo local
-#    Hoy tiene: amor, cariño, aprecio, comunidad, hermanos,
-#    hermandad, patria, tierra, queremos, unidos, solidaridad,
-#    fraternidad
-#    Faltan: orgullo local, identidad municipal, gentilicios
-# ─────────────────────────────────────────────
-AMOR_CIVICO_NUEVAS = {
-    # Orgullo e identidad
-    "orgullo",
-    "orgulloso",
-    "orgullosa",
-    "orgullosos",
-    "orgullosas",
-    "somos",                # "somos Santa Ana", "somos campeones"
-    "nuestra santa ana",    # frase multi-palabra
-    "mi santa ana",         # frase multi-palabra
-    "santa ana",            # frase multi-palabra — OJO: puede ser neutro en menciones de lugar;
-                            # el scorer de contexto debería ponderar, pero cubre el caso positivo
-    "mi municipio",         # frase multi-palabra
-    "nuestro municipio",    # frase multi-palabra
-    "mi ciudad",            # frase multi-palabra
-    "nuestra ciudad",       # frase multi-palabra
-    "mi pueblo",            # frase multi-palabra
-    "nuestro pueblo",       # frase multi-palabra
-    "santaneco",
-    "santaneca",
-    "santanecos",
-    "santanecas",
-    "nuestra alcaldia",     # frase multi-palabra
-    "nuestro alcalde",      # frase multi-palabra
-    "juntos",
-    "todos juntos",         # frase multi-palabra
-    "union",
-    "unidad",
-    "nuestra comunidad",    # frase multi-palabra
-    "mi comunidad",         # frase multi-palabra
-    "el municipio",         # frase multi-palabra
-    "nuestro municipio",    # frase multi-palabra
-    "amo santa ana",        # frase multi-palabra
-    "quiero santa ana",     # frase multi-palabra
-}
-
-# ─────────────────────────────────────────────
-# 4. reconocimiento — agradecimiento a la institución
-#    Hoy tiene: agradezco, gracias, felicito, bravo, buen trabajo,
-#    reconocimiento, aprecio, bendiciones, excelente, gracias por,
-#    mi agradecimiento
-#    Faltan: frases con objeto de agradecimiento específico
-# ─────────────────────────────────────────────
-RECONOCIMIENTO_NUEVAS = {
-    # Frases con objeto (lo que agradecen concretamente)
-    "gracias por la pantalla",      # frase multi-palabra — este post específico
-    "gracias por traer",            # frase multi-palabra
-    "gracias por el evento",        # frase multi-palabra
-    "gracias por la actividad",     # frase multi-palabra
-    "gracias por la iniciativa",    # frase multi-palabra
-    "gracias al alcalde",           # frase multi-palabra
-    "gracias alcalde",              # frase multi-palabra
-    "gracias edil",                 # frase multi-palabra
-    "gracias municipalidad",        # frase multi-palabra
-    "gracias municipio",            # frase multi-palabra
-    "gracias alcaldia",             # frase multi-palabra
-    "gracias a la alcaldia",        # frase multi-palabra
-    "gracias a la municipalidad",   # frase multi-palabra
-    "gracias por pensar",           # frase multi-palabra ("gracias por pensar en nosotros")
-    "gracias por organizar",        # frase multi-palabra
-    "gracias por hacer",            # frase multi-palabra
-    "muy buena idea",               # frase multi-palabra
-    "buena idea",                   # frase multi-palabra
-    "gran iniciativa",              # frase multi-palabra
-    "linda iniciativa",             # frase multi-palabra
-    "buena iniciativa",             # frase multi-palabra
-    "que iniciativa",               # frase multi-palabra
-    "excelente iniciativa",         # frase multi-palabra
-    "excelente idea",               # frase multi-palabra
-    "que buena idea",               # frase multi-palabra
-    "que detalle",                  # frase multi-palabra (SV: "qué detalle del alcalde")
-    "buen detalle",                 # frase multi-palabra
-    "bonito detalle",               # frase multi-palabra
-    "lindo detalle",                # frase multi-palabra
-    "felicitaciones al alcalde",    # frase multi-palabra
-    "felicitaciones al edil",       # frase multi-palabra
-    "felicitaciones a la alcaldia", # frase multi-palabra
-}
-
-
-# ─────────────────────────────────────────────
-# RESUMEN PARA APLICAR EN emotion.py
-# ─────────────────────────────────────────────
-# En EMOTION_LEXICON, fusionar con update():
-#
-#   EMOTION_LEXICON["euforia"].update(EUFORIA_NUEVAS)
-#   EMOTION_LEXICON["alegria"].update(ALEGRIA_NUEVAS)
-#   EMOTION_LEXICON["amor_civico"].update(AMOR_CIVICO_NUEVAS)
-#   EMOTION_LEXICON["reconocimiento"].update(RECONOCIMIENTO_NUEVAS)
-#
-# ADVERTENCIA sobre "jose" en euforia:
-#   Es el único token ambiguo del lote. Si en posts no deportivos aparece
-#   alguien llamado "José" y el comentario es negativo, podría clasificar
-#   incorrectamente. Monitorear en los próximos 2 períodos y retirar si
-#   genera ruido. Alternativa: reemplazar por la frase multi-palabra
-#   "jose gol" o eliminarlo del patch.
-#
-# ADVERTENCIA sobre "santa ana" en amor_civico:
-#   Como substring de texto normalizado, puede aparecer en comentarios
-#   neutros o críticos que simplemente mencionan el lugar. El scorer de
-#   contexto de classify_emotion() debería absorber el ruido porque
-#   necesita score acumulado para ganar — una sola mención de "santa ana"
-#   no va a superar a categorías con más tokens en el mismo comentario.
-#   Aceptable.
-# ─────────────────────────────────────────────

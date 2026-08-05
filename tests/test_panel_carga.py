@@ -26,6 +26,26 @@ def test_panel_carga_importa_render_revisor():
     assert "render_revisor_temas" in src
 
 
+def test_panel_carga_pestanas_revision_tres_plataformas():
+    """17.1.1: la revisión de temas tiene una pestaña por plataforma
+    (Facebook, TikTok, Externos) con contador de pendientes."""
+    src = _leer_fuente()
+    assert "Revisión de Temas" in src
+    assert "fb_comments" in src
+    assert "comment_id" in src
+    assert "external_comments" in src
+    assert "pend." in src
+
+
+def test_panel_carga_revision_pasa_tabla_y_columna():
+    """17.1.1: cada pestaña de revisión pasa tabla/col_id/col_texto a
+    render_revisor_temas para la escritura de vuelta en la plataforma."""
+    src = _leer_fuente()
+    assert "tabla=" in src
+    assert "col_id=" in src
+    assert "col_texto=" in src
+
+
 def test_panel_carga_tres_pestanas():
     """panel_carga.py define exactamente 3 pestañas: cargar, JSON, editor."""
     src = _leer_fuente()

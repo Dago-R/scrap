@@ -222,13 +222,20 @@ def asegurar_tabla(db_path):
 def guardar_aprobacion(db_path, comment_id, tema, texto="",
                        tema_sugerido=None, tono=None, confianza=None,
                        postura=None, emocion=None, emociones=None,
-                       intensidad_postura=None):
+                       intensidad_postura=None,
+                       tabla=None, col_id=None):
     """Guarda (o actualiza) la aprobacion de un comentario.
 
     Devuelve True si se guardo. En la aprobacion MANUAL validamos de forma
     estricta: solo se aceptan categorias englobantes validas o claves legacy
     conocidas (que luego se remapean a su englobante). Cualquier otro tema
     inexistente -o falta comment_id/tema- no guarda y devuelve False.
+
+    Si se provee `tabla`/`col_id` (tabla de comentarios de la plataforma),
+    ademas de escribir en tema_aprobaciones escribe el tema y la emocion de
+    vuelta en la tabla de comentarios (UPDATE ... SET tema_sugerido=?, emocion=?)
+    para que la capa de evidencia (get_temas_sugeridos_con_contexto) y la
+    trazabilidad del período lo vean.
 
     `postura` se calcula automaticamente a partir de la emoción via
     derivar_aprobacion(). Si se pasa explicitamente, se ignora — la postura
@@ -333,6 +340,21 @@ def guardar_aprobacion(db_path, comment_id, tema, texto="",
                 emociones_json,
             ),
         )
+        # Escritura de vuelta en la tabla de comentarios de la plataforma:
+        # sin esto, la aprobacion queda solo en tema_aprobaciones y la capa
+        # de evidencia (que lee tema_sugerido/emocion de las tablas de
+        # comentarios) nunca la ve. INSERT/UPDATE idempotente.
+        if tabla and col_id:
+            _asegurar_columnas_emocion(conn, tabla)
+            conn.execute(
+                f"UPDATE {tabla} SET tema_sugerido = ?, emocion = ? "
+                f"WHERE {col_id} = ?",
+                (
+                    tema,
+                    emocion_dominante,
+                    comment_id,
+                ),
+            )
         conn.commit()
         return True
     finally:

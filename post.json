@@ -1,138 +1,204 @@
 {
   "posts": [
     {
-      "texto_post": "El tiempo complementario visto en las pantallas instaladas en el parque Libertad. 😪🇦🇷🇪🇸 #SantaAnaCentro",
-      "fecha": {"valor": "Ayer a las 3:30 p.m.", "confianza": "seguro"},
-      "autor_pagina": "Gustavo Acevedo",
-      "enlace": {"valor": "https://www.facebook.com/share/p/1BZRwPjHW1/", "confianza": "seguro"},
-      "reacciones": {
-        "likes": {"valor": 213, "confianza": "seguro"},
-        "loves": {"valor": 15, "confianza": "seguro"},
-        "cares": {"valor": 0, "confianza": "dudoso"},
-        "hahas": {"valor": 52, "confianza": "seguro"},
-        "sads": {"valor": 0, "confianza": "dudoso"},
-        "wows": {"valor": 1, "confianza": "seguro"},
-        "angrys": {"valor": 3, "confianza": "seguro"},
-        "total": {"valor": 284, "confianza": "seguro"}
+      "texto_post": "Con profundo fervor y devoción, miles de santanecos acompañamos la solemne procesión de Señora Santa Ana y San Joaquín, marcando el grandioso cierre de nuestras Fiestas Julias 2026.\n\nEsto nos reafirma que la verdadera fuerza de Santa Ana Centro reside en la fe, la unidad y la esperanza de nuestra gente.\n\n¡Viva Señora Santa Ana!\n\n#FiestasJulias2026 #SantaAnaCentro #ElSalvador",
+      "fecha": {"valor": "2026-07-27", "confianza": "seguro"},
+      "autor_cuenta": "Gustavo Acevedo",
+      "enlace": {"valor": "https://www.tiktok.com/@acevedogustavo_/video/7667087141238934804?is_from_webapp=1&sender_device=pc&web_id=7644311973786355220", "confianza": "seguro"},
+      "metricas": {
+        "likes": {"valor": 154, "confianza": "seguro"},
+        "favoritos": {"valor": 5, "confianza": "seguro"},
+        "comentarios_count": {"valor": 2, "confianza": "seguro"}
       },
-      "comentarios_count": {"valor": 27, "confianza": "seguro"},
       "comentarios": [
         {
-          "texto": "España ganará",
-          "autor": "Ana Monterroza",
-          "emocion": "Euforia",
-          "intensidad": "intensa",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "gustavo me das un saludo",
+          "emocion": "interes",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Interacción con el creador / solicitud de saludo"
         },
         {
-          "texto": "Ggoooolllll de España a",
-          "autor": "Verito Gamero",
-          "emocion": "Euforia",
-          "intensidad": "intensa",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "🥰🥰🥰",
+          "emocion": "amor_civico",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Fiestas Julias / procesión religiosa"
+        }
+      ]
+    },
+    {
+      "texto_post": "¡La pólvora del cierre de las Fiestas Julias 2026! 🎆🎇\n\n¡Nos vemos en el 2027! 😉😎\n\n#FiestasJulias2026 #SantaAnaCentro #ElSalvador #Fyp #Tiktok",
+      "fecha": {"valor": "2026-07-27", "confianza": "seguro"},
+      "autor_cuenta": "Gustavo Acevedo",
+      "enlace": {"valor": "https://www.tiktok.com/@acevedogustavo_/video/7667089912893574421?is_from_webapp=1&sender_device=pc&web_id=7644311973786355220", "confianza": "seguro"},
+      "metricas": {
+        "likes": {"valor": 251, "confianza": "seguro"},
+        "favoritos": {"valor": 12, "confianza": "seguro"},
+        "comentarios_count": {"valor": 4, "confianza": "seguro"}
+      },
+      "comentarios": [
+        {
+          "texto": "Nos dejo sin discomovil a Rio Zarco para estas fiestas julias 😞 no se vale tio",
+          "emocion": "reclamo",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Falta de discomóvil / logística de las Fiestas Julias"
         },
         {
-          "texto": "España gana",
-          "autor": "Loli Castillo",
-          "emocion": "Confianza",
-          "intensidad": "media",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "Si no fue ala verbena no reniegues",
+          "emocion": "ironia",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Respuesta/réplica al reclamo del comentario anterior"
         },
         {
-          "texto": "Jose Miguel Martinez ahí hubiéramos ido",
-          "autor": "Gabi Martz",
-          "emocion": "Alegría",
-          "intensidad": "media",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "Muchas Gracias por siempre darnos las mejores fiestas Alcalde🤍🎆🎉",
+          "emocion": "reconocimiento",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Agradecimiento a la alcaldía por las Fiestas Julias"
         },
         {
-          "texto": "Gabi Martz y sin gastar haha",
-          "autor": "Jose Miguel Martinez",
-          "emocion": "Alegría",
-          "intensidad": "media",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
-        },
+          "texto": "😍😍😍",
+          "emocion": "amor_civico",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Reacción positiva al contenido/cierre de fiestas"
+        }
+      ]
+    },
+    {
+      "texto_post": "También desde nuestra bella catedral despedimos las Fiestas Julias 2026 en honor a Señora Santa Ana. 🎆🎇\n\n#FiestasJulias2026 #SantaAnaCentro #ElSalvador #fyp #tiktok",
+      "fecha": {"valor": "2026-07-27", "confianza": "seguro"},
+      "autor_cuenta": "Gustavo Acevedo",
+      "enlace": {"valor": "https://www.tiktok.com/@acevedogustavo_/video/7667100277249445141?is_from_webapp=1&sender_device=pc&web_id=7644311973786355220", "confianza": "seguro"},
+      "metricas": {
+        "likes": {"valor": 1181, "confianza": "seguro"},
+        "favoritos": {"valor": 49, "confianza": "seguro"},
+        "comentarios_count": {"valor": 16, "confianza": "seguro"}
+      },
+      "comentarios": [
         {
-          "texto": "España ganará ufff",
-          "autor": "Any Rodríguez",
+          "texto": "yonalaaire",
           "emocion": null,
-          "intensidad": null,
-          "postura": null,
           "confianza_emocion": "no_detectado",
           "tema_sugerido": null
         },
         {
-          "texto": "España 1 FIFA 0",
-          "autor": "Juan El Bautista",
-          "emocion": null,
-          "intensidad": null,
-          "postura": null,
-          "confianza_emocion": "no_detectado",
-          "tema_sugerido": null
+          "texto": "Las mujeres queremos seguir siento consentidas, así que queremos a Karol G el otro año 🥰",
+          "emocion": "esperanza",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Petición de line-up de artistas para el próximo año"
         },
         {
-          "texto": "OLEEEE",
-          "autor": "Karen Flores",
-          "emocion": "Expectativa",
-          "intensidad": "media",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "anda hace la calle de mi colonia voz p3nd3ja",
+          "emocion": "agresividad",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Conflicto/insulto entre usuarios"
         },
         {
-          "texto": "Lo mejor de lo mejor",
-          "autor": "Ede Gonzaleth",
-          "emocion": "Satisfacción",
-          "intensidad": null,
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "no soy de santa ana apoyo al Fas pero solo pienso si lo que gasto en esas luces se hubiese ocupado en calles u obras para las personas de las calles",
+          "emocion": "objecion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Uso de fondos públicos: fiestas vs. obras"
         },
         {
-          "texto": "",
-          "autor": "Eduardo Cruz",
-          "emocion": null,
-          "intensidad": null,
-          "postura": null,
-          "confianza_emocion": "no_detectado",
-          "tema_sugerido": null
+          "texto": "Deberían tomar y postear las fotos de las calles así le recuerdan que debe hacer",
+          "emocion": "objecion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Rendición de cuentas / estado de las calles"
         },
         {
-          "texto": "",
-          "autor": "Mary Puerto",
-          "emocion": "Confianza",
-          "intensidad": "media",
-          "postura": "apoyo",
-          "confianza_emocion": "dudoso",
-          "tema_sugerido": null
+          "texto": "Gracias señor alcalde excelente trabajo 🙏😘",
+          "emocion": "reconocimiento",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Agradecimiento al alcalde por las fiestas"
         },
         {
-          "texto": "Que sacrificio. Si canal 4 lo pasa gratis ..",
-          "autor": "Osito Sam",
-          "emocion": null,
-          "intensidad": null,
-          "postura": null,
-          "confianza_emocion": "no_detectado",
-          "tema_sugerido": null
+          "texto": "😳 RDO ES BOTAR EL DINERO",
+          "emocion": "desaprobacion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Crítica al gasto en pólvora/luces"
         },
         {
-          "texto": "Gana España lo bueno q igual gana barcelona",
-          "autor": "Xenia Niño",
-          "emocion": null,
-          "intensidad": null,
-          "postura": null,
-          "confianza_emocion": "no_detectado",
-          "tema_sugerido": null
+          "texto": "Recogelo pues 😂😂",
+          "emocion": "ironia",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Respuesta burlona a la crítica del gasto"
+        },
+        {
+          "texto": "Esooo",
+          "emocion": "alegria",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Reacción de aprobación al contenido"
+        },
+        {
+          "texto": "Wow",
+          "emocion": "sorpresa",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Reacción de asombro al contenido"
+        },
+        {
+          "texto": "precioso",
+          "emocion": "admiracion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Elogio estético al evento"
+        },
+        {
+          "texto": "Tiene mis respetos señor alcalde",
+          "emocion": "reconocimiento",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Respeto/reconocimiento al alcalde"
+        },
+        {
+          "texto": "se lucio al calde con estas fiestas julias digan lo quedigan el mejor si queda se guiremos para mas de esto y si sale se acordaran de ud estas fechas 🙏🫶lo queremos al calde gustavo 🙏",
+          "emocion": "amor_civico",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Elogio a la gestión y deseo de continuidad"
+        },
+        {
+          "texto": "Lujo de Fiestas !",
+          "emocion": "admiracion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Elogio a la calidad de las fiestas"
+        },
+        {
+          "texto": "😍😍😍🙏",
+          "emocion": "amor_civico",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Reacción positiva al contenido"
+        },
+        {
+          "texto": "🥰🥰🥰",
+          "emocion": "amor_civico",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Reacción positiva al contenido"
+        }
+      ]
+    },
+    {
+      "texto_post": "¡Viva Señora Santa Ana y San Joaquín! ✝️\n\n¡Qué orgullo es ser santaneco!\n\nAquí estamos comprometidos, trabajando por nuestra tierra que tanto amamos.\n\nVamos todos juntos, por el camino correcto y con Dios presente.\n\n#FiestasJulias2026 #SantaAnaCentro #ElSalvador",
+      "fecha": {"valor": "Hace 1 semana(s)", "confianza": "seguro"},
+      "autor_cuenta": "Gustavo Acevedo",
+      "enlace": {"valor": "https://www.tiktok.com/@acevedogustavo_/video/7667359675486096661?is_from_webapp=1&sender_device=pc&web_id=7644311973786355220", "confianza": "seguro"},
+      "metricas": {
+        "likes": {"valor": 161, "confianza": "seguro"},
+        "favoritos": {"valor": 2, "confianza": "seguro"},
+        "comentarios_count": {"valor": 3, "confianza": "seguro"}
+      },
+      "comentarios": [
+        {
+          "texto": "Muchas gracias Ing. Estas han sido las mejores fiestas julias que he visto 👍👍👍👍👍 se luciò Dios lo bendiga siempre",
+          "emocion": "reconocimiento",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Agradecimiento y bendición al alcalde por las fiestas"
+        },
+        {
+          "texto": "excelentes fiestas señor alcalde felicidades",
+          "emocion": "reconocimiento",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Felicitación al alcalde por las fiestas"
+        },
+        {
+          "texto": "adiós impuestos ...lo dijo Bukele no se quitó una mafia para q hubiera otra ...santa Ana le cobra por cartel o rótulo puesto a los negocios y los impuestos qn aumentado demasiado y si para el lunes no los baja la alcaldía de santa Ana van denunciados tanto por personas naturales como por el presidente Bukele ante fiscalía ...espero en santa Ana hagan inventario del dinero gastado vamos a ver q tal termina el alcalde 🚔",
+          "emocion": "indignacion",
+          "confianza_emocion": "seguro",
+          "tema_sugerido": "Denuncia sobre aumento de impuestos y gasto municipal"
         }
       ]
     }

@@ -22,8 +22,10 @@ import logging
 from analytics.queries import (
     get_fb_references_by_ids,
     get_tk_references_by_ids,
+    get_ext_references_by_ids,
     get_fb_post_urls_by_pagina,
     get_tk_post_urls_by_cuenta,
+    get_ext_post_urls_by_pagina,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,6 +52,18 @@ def _obtener_tk_references(post_ids: list[str]) -> dict[str, str]:
         return {r["post_id"]: r["post_url"] for r in rows if r.get("post_url")}
     except Exception as e:
         logger.debug("TK references lookup failed: %s", e)
+        return {}
+
+
+def _obtener_ext_references(post_ids: list[str]) -> dict[str, str]:
+    """Resuelve post_ids de Externos a {post_id: post_url}."""
+    if not post_ids:
+        return {}
+    try:
+        rows = get_ext_references_by_ids(post_ids)
+        return {r["post_id"]: r["post_url"] for r in rows if r.get("post_url")}
+    except Exception as e:
+        logger.debug("EXT references lookup failed: %s", e)
         return {}
 
 
@@ -93,6 +107,13 @@ def _resolver_ids_a_urls(post_ids: list[str]) -> list[str]:
 
     # Combinar resultados
     url_map = {**fb_map, **tk_map}
+
+    # Externos (medios): sus post_ids no viven en FB ni TK.
+    try:
+        ext_map = _obtener_ext_references(post_ids)
+        url_map.update(ext_map)
+    except Exception as e:
+        logger.debug("EXT references lookup failed: %s", e)
 
     # Fallback para IDs no encontrados en las tablas de referencia
     no_encontrados = [pid for pid in post_ids if pid not in url_map]
@@ -144,9 +165,9 @@ def resolver_evidencia_friccion(tema: str, evidencia: dict) -> list[str]:
 def resolver_evidencia_voz(pagina: str, evidencia: dict) -> list[str]:
     """Resuelve post_ids de una voz de influencia a URLs reales.
 
-    Busca posts de la pagina en fb_posts (por page_name) y en videos
-    de TikTok (por account_id). Si genuinamente no hay posts de esa
-    pagina en el periodo, retorna [].
+    Busca posts de la pagina en fb_posts (por page_name), en videos
+    de TikTok (por account_id) y en external_posts (por page_name).
+    Si genuinamente no hay posts de esa pagina en el periodo, retorna [].
 
     Usa DEFAULT_VOZ_LIMIT (50) como limite por fuente para controlar
     el tamano del prompt hacia Claude sin perder cobertura significativa.
@@ -164,6 +185,11 @@ def resolver_evidencia_voz(pagina: str, evidencia: dict) -> list[str]:
         urls.extend(tk_urls)
     except Exception as e:
         logger.debug("TK account lookup failed for '%s': %s", pagina, e)
+    try:
+        ext_urls = get_ext_post_urls_by_pagina(pagina, limit=DEFAULT_VOZ_LIMIT)
+        urls.extend(ext_urls)
+    except Exception as e:
+        logger.debug("EXT page lookup failed for '%s': %s", pagina, e)
     return list(dict.fromkeys(urls))
 
 

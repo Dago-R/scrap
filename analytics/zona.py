@@ -29,7 +29,7 @@ MUNICIPIOS: set[str] = {
 }
 
 # Zonas / barrios urbanos de Santa Ana ciudad
-ZONAS_GT: set[str] = {
+ZONAS_URBANAS: set[str] = {
     "centro", "centro historico", "el calvario", "santa lucia",
     "colonia magana", "colonia flor blanca", "colonia la paz",
     "colonia modelo", "colonia santa barbara", "colonia san jose",
@@ -50,7 +50,7 @@ BARRIOS: set[str] = {
 }
 
 # Unir todo el gazetteer
-ZONAS_CONOCIDAS: set[str] = DEPARTAMENTOS | MUNICIPIOS | ZONAS_GT | BARRIOS
+ZONAS_CONOCIDAS: set[str] = DEPARTAMENTOS | MUNICIPIOS | ZONAS_URBANAS | BARRIOS
 
 
 # ── Normalización ──
@@ -69,7 +69,7 @@ from dataclasses import dataclass, field as dc_field
 @dataclass
 class ZonaResult:
     zona: str = ""
-    tipo: str = ""  # "departamento", "municipio", "zona_gt", "barrio", "propuesta"
+    tipo: str = ""  # "departamento", "municipio", "zona_urbana", "barrio", "propuesta"
     evidencia: str = ""
     es_propuesta: bool = False
 
@@ -79,7 +79,7 @@ class ZonaResult:
 def detectar_zona(text: str) -> ZonaResult:
     """Detecta zona/mención geográfica en un texto.
 
-    Prioridad: Zona GT > Barrios > Municipios > Departamentos.
+    Prioridad: Zona urbana > Barrios > Municipios > Departamentos.
     Si no se reconoce, retorna zona="" (nunca fuerza una zona por defecto).
     """
     if not text or not text.strip():
@@ -87,11 +87,11 @@ def detectar_zona(text: str) -> ZonaResult:
 
     low = _normalize(text)
 
-    # 1. Buscar zonas de la Ciudad de Guatemala (prioridad alta)
-    for zona in sorted(ZONAS_GT, key=len, reverse=True):
+    # 1. Buscar zonas urbanas de Santa Ana (prioridad alta)
+    for zona in sorted(ZONAS_URBANAS, key=len, reverse=True):
         zona_norm = _normalize(zona)
         if zona_norm in low:
-            return ZonaResult(zona=zona, tipo="zona_gt", evidencia=zona)
+            return ZonaResult(zona=zona, tipo="zona_urbana", evidencia=zona)
 
     # 2. Buscar barrios
     for barrio in sorted(BARRIOS, key=len, reverse=True):

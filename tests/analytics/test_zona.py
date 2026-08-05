@@ -2,7 +2,7 @@
 import pytest
 from analytics.zona import (
     detectar_zona, aggregate_zonas, es_propuesta_zona,
-    ZONAS_CONOCIDAS, DEPARTAMENTOS, MUNICIPIOS, ZONAS_GT,
+    ZONAS_CONOCIDAS, DEPARTAMENTOS, MUNICIPIOS, ZONAS_URBANAS,
 )
 
 
@@ -26,28 +26,28 @@ def test_zona_sin_mencion():
 
 # ── Zonas urbanas de Santa Ana ──
 
-def test_zona_gt_centro_historico():
+def test_zona_urbana_centro_historico():
     r = detectar_zona("El centro histórico necesita restauración")
     assert r.zona == "centro historico"
-    assert r.tipo == "zona_gt"
+    assert r.tipo == "zona_urbana"
 
 
-def test_zona_gt_colonia_magana():
+def test_zona_urbana_colonia_magana():
     r = detectar_zona("En colonia Magana hay muchos baches")
     assert r.zona == "colonia magana"
-    assert r.tipo == "zona_gt"
+    assert r.tipo == "zona_urbana"
 
 
-def test_zona_gt_colonia_flor_blanca():
+def test_zona_urbana_colonia_flor_blanca():
     r = detectar_zona("Colonia Flor Blanca necesita más alumbrado")
     assert r.zona == "colonia flor blanca"
-    assert r.tipo == "zona_gt"
+    assert r.tipo == "zona_urbana"
 
 
-def test_zona_gt_residencial():
+def test_zona_urbana_residencial():
     r = detectar_zona("El residencial Santa Barbara tiene buenos parques")
     assert r.zona == "residencial santa barbara"
-    assert r.tipo == "zona_gt"
+    assert r.tipo == "zona_urbana"
 
 
 # ── Municipios ──
@@ -96,11 +96,11 @@ def test_depto_san_miguel():
     assert r.tipo in ("departamento",)
 
 
-# ── Prioridad: zona_gt > barrio > municipio > departamento ──
+# ── Prioridad: zona_urbana > barrio > municipio > departamento ──
 
 def test_prioridad_zona_vs_depto():
     r = detectar_zona("La colonia Magana de Santa Ana necesita más alumbrado")
-    assert r.tipo == "zona_gt"
+    assert r.tipo == "zona_urbana"
 
 
 def test_prioridad_municipio_vs_depto():
@@ -113,7 +113,7 @@ def test_prioridad_municipio_vs_depto():
 def test_gazetteer_completo():
     assert len(ZONAS_CONOCIDAS) > 10
     assert len(DEPARTAMENTOS) == 14
-    assert len(ZONAS_GT) > 5
+    assert len(ZONAS_URBANAS) > 5
 
 
 # ── Propuestas ──
@@ -250,12 +250,12 @@ def test_municipios_nombres_validos():
         assert pat.match(muni), f"MUNICIO '{muni}' tiene caracteres no válidos"
 
 
-def test_zonas_gt_nombres_validos():
-    """Ninguna entrada de ZONAS_GT contiene caracteres no válidos."""
+def test_zonas_urbanas_nombres_validos():
+    """Ninguna entrada de ZONAS_URBANAS contiene caracteres no válidos."""
     import re
     pat = re.compile(r"^[a-záéíóúñü\s\d]+$")
-    for zona in ZONAS_GT:
-        assert pat.match(zona), f"ZONA_GT '{zona}' tiene caracteres no válidos"
+    for zona in ZONAS_URBANAS:
+        assert pat.match(zona), f"ZONA_URBANA '{zona}' tiene caracteres no válidos"
 
 
 # ── 18.3: Propuesta de zona se registra en taxonomias_pendientes ──

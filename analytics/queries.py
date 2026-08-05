@@ -359,6 +359,25 @@ def get_tk_recent_references(limit=10, db_path=None):
         conn.close()
 
 
+def get_ext_references_by_ids(post_ids, db_path=None):
+    """Get Externos post references by post_id list."""
+    if not post_ids:
+        return []
+    db_path = db_path or _cfg.EXTERNOS_DB
+    conn = _conn(db_path)
+    try:
+        placeholders = ",".join("?" for _ in post_ids)
+        rows = conn.execute(
+            f"SELECT post_id, page_name, created_time, post_url "
+            f"FROM external_posts WHERE post_id IN ({placeholders}) "
+            f"AND post_url IS NOT NULL AND TRIM(post_url) != ''",
+            post_ids,
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
 def get_external_pages(db_path=None):
     """List external pages."""
     db_path = db_path or _cfg.EXTERNOS_DB
@@ -534,12 +553,22 @@ def get_external_page_engagement(db_path=None):
             "  COUNT(DISTINCT po.post_id) as posts, "
             "  SUM(COALESCE(po.total_reactions,0)) as total_reactions, "
             "  SUM(COALESCE(po.comments_count,0)) as comments_count_meta, "
-            "  COUNT(ec.comment_id) as scraped_comments "
+            "  COALESCE(("
+            "    SELECT COUNT(*) FROM external_comments ec "
+            "    WHERE ec.post_id IN ("
+            "      SELECT xp.post_id FROM external_posts xp WHERE xp.page_name = p.name"
+            "    )"
+            "  ),0) as scraped_comments "
             "FROM external_pages p "
             "LEFT JOIN external_posts po ON po.page_name = p.name "
-            "LEFT JOIN external_comments ec ON ec.post_id = po.post_id "
             "GROUP BY p.name "
-            "ORDER BY total_reactions + COUNT(ec.comment_id) DESC"
+            "ORDER BY "
+            "  SUM(COALESCE(po.total_reactions,0)) + COALESCE(("
+            "    SELECT COUNT(*) FROM external_comments ec "
+            "    WHERE ec.post_id IN ("
+            "      SELECT xp.post_id FROM external_posts xp WHERE xp.page_name = p.name"
+            "    )"
+            "  ),0) DESC"
         ).fetchall()
         result = []
         for r in rows:
@@ -1235,6 +1264,30 @@ def get_tk_post_urls_by_cuenta(cuenta, limit=50, db_path=None):
         conn.close()
 
 
+def get_ext_post_urls_by_pagina(pagina, limit=50, db_path=None):
+    """Voces — URLs de posts Externos (medios) de una pagina para evidencia.
+
+    Retorna lista de post_url de posts de la pagina indicada en
+    external_posts. Filtra por page_name (case-insensitive match parcial).
+    El limite por defecto es 50 (ver DEFAULT_VOZ_LIMIT en evidence.py).
+    """
+    if not pagina:
+        return []
+    db_path = db_path or _cfg.EXTERNOS_DB
+    conn = _conn(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT post_url FROM external_posts "
+            "WHERE page_name LIKE ? "
+            "AND post_url IS NOT NULL AND TRIM(post_url) != '' "
+            "ORDER BY created_time DESC LIMIT ?",
+            (f"%{pagina}%", limit),
+        ).fetchall()
+        return [r["post_url"] for r in rows if r["post_url"]]
+    finally:
+        conn.close()
+
+
 def get_fb_anger_by_zone(db_path=None):
     """§F — Ratio de enojo por zona para ZDI.
 
@@ -1271,6 +1324,59 @@ def get_fb_anger_by_zone(db_path=None):
         return result
     finally:
         conn.close()
+
+
+def get_fb_comments_emotion_by_zone(db_path=None):
+    """§F — Termómetro territorial basado en COMENTARIOS (no reacciones).
+
+    Agrupa fb_comments por zona y devuelve para cada una: número real de
+    comentarios, conteo de emociones negativas y distribución por emoción.
+
+    nivel de tensión (0-100) = % de comentarios con emoción de familia
+    fear/sadness/disgust/anger sobre el total de comentarios de la zona.
+    La escala es directa (0-100), sin multiplicadores.
+
+    Returns:
+        [{zona, n_comentarios, negativos, pct_negativos, emociones: {emo: n}}]
+        ordenado por pct_negativos descendente.
+    """
+    db_path = db_path or _cfg.FACEBOOK_DB
+    FAMILIAS_NEGATIVAS = {"fear", "sadness", "disgust", "anger"}
+    conn = _conn(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT "
+            "  COALESCE(NULLIF(zona,''), 'sin_zona') as zona, "
+            "  COALESCE(emocion,'') as emocion, "
+            "  COUNT(*) as n "
+            "FROM fb_comments "
+            "GROUP BY zona, emocion"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    from dashboard.tema_taxonomia import EMOCIONES
+    agrupado: dict[str, dict] = {}
+    for r in rows:
+        z = r["zona"]
+        d = agrupado.setdefault(z, {
+            "zona": z, "n_comentarios": 0, "negativos": 0, "emociones": {},
+        })
+        d["n_comentarios"] += r["n"]
+        emo = r["emocion"]
+        if emo:
+            d["emociones"][emo] = d["emociones"].get(emo, 0) + r["n"]
+            familia = EMOCIONES.get(emo, {}).get("familia", "")
+            if familia in FAMILIAS_NEGATIVAS:
+                d["negativos"] += r["n"]
+
+    result = []
+    for d in agrupado.values():
+        total = d["n_comentarios"]
+        d["pct_negativos"] = round(d["negativos"] / total * 100, 1) if total else 0.0
+        result.append(d)
+    result.sort(key=lambda x: -x["pct_negativos"])
+    return result
 
 
 def _fusionar_aprobaciones_por_categoria(aprobaciones: list) -> list:

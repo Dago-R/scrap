@@ -87,8 +87,77 @@ st.markdown("---")
 st.subheader("Revisión de Temas")
 from src.config import Config as _Cfg
 _cfg_temas = _Cfg()
-render_revisor_temas(
-    db_path=_cfg_temas.FACEBOOK_DB,
-    tabla="fb_comments",
-    col_id="comment_id",
-)
+
+
+def _pendientes_plataforma(db_path, tabla, col_id, col_texto):
+    """Contador real de comentarios sin aprobación para una plataforma."""
+    import sqlite3
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            n = conn.execute(
+                f"SELECT COUNT(*) FROM {tabla} "
+                f"WHERE {col_texto} IS NOT NULL AND {col_texto} != ''"
+            ).fetchone()[0]
+        finally:
+            conn.close()
+    except Exception:
+        n = 0
+    from dashboard.tema_aprobaciones import ids_aprobados
+    try:
+        aprobados = ids_aprobados(db_path)
+    except Exception:
+        aprobados = set()
+    return max(0, n - len(aprobados))
+
+
+_PLATAFORMAS_REVISION = [
+    {
+        "label": "Facebook",
+        "db": _cfg_temas.FACEBOOK_DB,
+        "tabla": "fb_comments",
+        "col_id": "comment_id",
+        "col_texto": "message",
+        "col_parent": "parent_comment_id",
+    },
+    {
+        "label": "TikTok",
+        "db": _cfg_temas.TIKTOK_DB,
+        "tabla": "comments",
+        "col_id": "id",
+        "col_texto": "text",
+        "col_parent": None,
+    },
+    {
+        "label": "Externos",
+        "db": _cfg_temas.EXTERNOS_DB,
+        "tabla": "external_comments",
+        "col_id": "comment_id",
+        "col_texto": "message",
+        "col_parent": None,
+    },
+]
+
+if len(_PLATAFORMAS_REVISION) > 1:
+    tabs_revision = st.tabs([
+        f"{p['label']} ({_pendientes_plataforma(p['db'], p['tabla'], p['col_id'], p['col_texto'])} pend.)"
+        for p in _PLATAFORMAS_REVISION
+    ])
+    for tab, p in zip(tabs_revision, _PLATAFORMAS_REVISION):
+        with tab:
+            render_revisor_temas(
+                db_path=p["db"],
+                tabla=p["tabla"],
+                col_id=p["col_id"],
+                col_texto=p["col_texto"],
+                col_parent=p["col_parent"],
+            )
+else:
+    p = _PLATAFORMAS_REVISION[0]
+    render_revisor_temas(
+        db_path=p["db"],
+        tabla=p["tabla"],
+        col_id=p["col_id"],
+        col_texto=p["col_texto"],
+        col_parent=p["col_parent"],
+    )

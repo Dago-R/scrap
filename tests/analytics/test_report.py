@@ -1,6 +1,6 @@
 """Tests para analytics/report.py (T5.2)."""
 import pytest
-from analytics.report import construir_analysis, generar_reporte_completo
+from analytics.report import construir_analysis, generar_reporte_completo, _construir_termometro_lugares
 
 
 def _sample_aprobaciones():
@@ -117,7 +117,9 @@ def test_clima_narrativo_fallback_sin_texts():
     data = construir_analysis(_sample_aprobaciones(), "2026-04", "2026-04-30")
     cn = data["bloque1"]["clima_narrativo"]
     assert cn["n_total_comentarios"] == 200  # 90+70+40
-    assert cn["tono_score_ayer"] == 0.0
+    assert cn["tono_score_ayer"] == cn["tono_score_hoy"]
+    assert cn["tendencia"] == 0.0
+    assert cn["hay_referencia_anterior"] is False
     assert cn["formula_usada"].startswith("pct_favorable/pct_critico:")
 
 
@@ -168,15 +170,65 @@ def test_clima_narrativo_texts_vacio_fallback():
 
 
 def test_tendencia_etiqueta():
+    """Sin snapshot previo de la misma métrica no se inventa variación:
+    la referencia queda en el valor actual y la tendencia en 0 (estable)."""
     texts = ["Excelente", "Brillante", "Genial", "Maravilloso"]
     data = construir_analysis(
         _sample_aprobaciones(), "2026-04", "2026-04-30",
         comentarios_texts=texts,
     )
     cn = data["bloque1"]["clima_narrativo"]
-    assert cn["tono_score_ayer"] == 0.0
-    assert cn["tendencia"] == cn["tono_score_hoy"]
-    assert cn["etiqueta_tendencia"] in ("mejorando", "empeorando", "estable")
+    assert cn["tono_score_ayer"] == cn["tono_score_hoy"]
+    assert cn["tendencia"] == 0.0
+    assert cn["etiqueta_tendencia"] == "estable"
+    assert cn["hay_referencia_anterior"] is False
+
+
+# ── 17.1.3 / 17.1.10: cobertura temática explícita ──
+
+def test_concentracion_publica_cobertura_tematica():
+    """concentracion_tematica debe publicar n_comentarios_con_tema,
+    n_comentarios_total, n_comentarios_sin_tema, pct_cobertura_tematica y
+    origen_tema (17.1.3 / 17.1.10)."""
+    textos = [
+        "Hay muchos baches en la calle principal",   # obras_servicios (humano/lexico)
+        "Baches por todas partes en la zona",        # obras_servicios
+        "Hola que tal",                              # no_aplica
+    ]
+    data = construir_analysis(
+        _sample_aprobaciones(), "2026-04", "2026-04-30",
+        comentarios_texts=textos,
+    )
+    ct = data["bloque1"]["concentracion_tematica"]
+    assert "n_comentarios_con_tema" in ct
+    assert "n_comentarios_total" in ct
+    assert "n_comentarios_sin_tema" in ct
+    assert "pct_cobertura_tematica" in ct
+    assert "origen_tema" in ct
+    assert ct["n_comentarios_total"] == 3
+    assert ct["n_comentarios_sin_tema"] >= 1
+    assert 0 <= ct["pct_cobertura_tematica"] <= 100.0
+
+
+# ── 17.1.6 / 17.1.7: termómetro con escala 0-100 y datos a nivel comentario ──
+
+def test_termometro_escala_no_duplica_porcentaje():
+    """nivel_tension debe ser el porcentaje directo (0-100), no *100."""
+    zonas = [
+        {
+            "zona": "centro",
+            "n_comentarios": 100,
+            "negativos": 12,
+            "pct_negativos": 12.0,
+            "emociones": {"tristeza": 12, "calma": 88},
+        },
+    ]
+    tl = _construir_termometro_lugares(zonas, {})
+    assert tl[0]["nivel_tension"] == 12.0
+    assert tl[0]["n_comentarios"] == 100
+    assert tl[0]["emocion_dominante"] == "calma"
+    assert tl[0]["pct_tristeza"] == 12.0
+    assert tl[0]["pct_calma"] == 88.0
 
 
 # ── 18.4: Emergentes solo recibe textos no_aplica/low-signal ──

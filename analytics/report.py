@@ -53,6 +53,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
                        fb_posts_with_sentiment: list | None = None,
                        fb_controversial_posts: list | None = None,
                        fb_anger_by_zone: list | None = None,
+                       fb_comments_emotion_by_zone: list | None = None,
                        alertas_cooldown_state: dict | None = None,
                        nsi_previo: float | None = None,
                        er_previo: float | None = None,
@@ -137,29 +138,15 @@ def construir_analysis(aprobaciones_agrupadas: list,
         else:
             tono_dominante = "neutral"
 
-    # Tendencia: score del mes anterior desde fb_monthly_sentiment
-    tono_score_ayer = 0.0
-    if fb_monthly_sentiment and periodo:
-        def _periodo_anterior(periodo_str: str) -> str:
-            y, m = map(int, periodo_str.split("-"))
-            m -= 1
-            if m == 0:
-                m, y = 12, y - 1
-            return f"{y:04d}-{m:02d}"
-        periodo_prev = _periodo_anterior(periodo)
-        prev_row = next((r for r in fb_monthly_sentiment if r[0] == periodo_prev), None)
-        if prev_row is not None:
-            avg_score_prev = float(prev_row[1])
-            # sentiment_score en DB es SENTIMENT_ORDER (-2..+2).
-            # Normalizar a la misma escala que tono_score_hoy (-100..+100).
-            tono_score_ayer = round(avg_score_prev / 2.0 * 100, 1)
-    tendencia = round(tono_score_hoy - tono_score_ayer, 2)
-    if tendencia > 1.0:
-        etiqueta_tendencia = "mejorando"
-    elif tendencia < -1.0:
-        etiqueta_tendencia = "empeorando"
-    else:
-        etiqueta_tendencia = "estable"
+    # Tendencia: referencia al periodo anterior de la MISMA métrica (tono_score).
+    # Solo existe un "hoy": tono_score_hoy (léxico sobre todos los comentarios).
+    # tono_score_ayer es el valor previo de ESA MISMA métrica; como el pipeline
+    # no persiste snapshots léxicos anteriores, sin dato previo la referencia se
+    # deja en el valor actual (tendencia 0.0) para NO inventar una variación.
+    tono_score_ayer = tono_score_hoy
+    hay_referencia_anterior = False
+    tendencia = 0.0
+    etiqueta_tendencia = "estable"
 
     # ── Meta ──
     meta = {
@@ -200,22 +187,41 @@ def construir_analysis(aprobaciones_agrupadas: list,
     # el análisis político. FB se incluye porque es institucional.
     # Se excluye TikTok del índice emocional cuando hay datos de externos.
     if comentarios_texts:
-        # Separar textos por plataforma si hay contexto disponible
+        # Separar textos por plataforma si hay contexto disponible.
+        # TikTok (contenido deportivo/festivo) se excluye del índice emocional
+        # SOLO cuando hay datos reales de externos; si no hay externos, TikTok
+        # entra al índice para no perder cobertura.
         if comentarios_con_contexto:
-            textos_sin_tiktok = [
+            plataformas_presentes = {
+                ctx.get("plataforma", "")
+                for ctx in comentarios_con_contexto
+                if ctx.get("texto") and ctx.get("plataforma")
+            }
+            hay_externos = "externos" in plataformas_presentes
+            textos_para_emo = [
                 ctx["texto"]
                 for ctx in comentarios_con_contexto
-                if ctx.get("plataforma") != "tiktok" and ctx.get("texto")
+                if ctx.get("texto")
+                and (not hay_externos or ctx.get("plataforma") != "tiktok")
             ]
-            textos_para_emo = textos_sin_tiktok if textos_sin_tiktok else comentarios_texts
+            if not textos_para_emo:
+                textos_para_emo = comentarios_texts
         else:
             textos_para_emo = comentarios_texts
         emo_agg = aggregate_emotions(textos_para_emo, es_oficial=es_oficial)
+        if comentarios_con_contexto:
+            plataformas_emo = sorted({
+                ctx.get("plataforma", "")
+                for ctx in comentarios_con_contexto
+                if ctx.get("plataforma")
+            })
+        else:
+            plataformas_emo = []
         indice_emociones = {
             "emocion_dominante": emo_agg["dominante"],
             "narrativa": "",
             "enlaces_referencia": [],
-            "fuente_plataformas": "facebook,externos" if comentarios_con_contexto else "todos",
+            "fuente_plataformas": ",".join(plataformas_emo) if plataformas_emo else "todos",
             "n_textos_analizados": len(textos_para_emo),
         }
         indice_emociones.update({f"pct_{k}": v for k, v in emo_agg["pct"].items()})
@@ -233,17 +239,53 @@ def construir_analysis(aprobaciones_agrupadas: list,
         indice_emociones.update({f"pct_{k}": v for k, v in pcts_global.items()})
 
     # ── 16.2: Clasificación temática ──
+    # Dos pasos INDEPENDIENTES (no un elif): el tema humano siempre gana y el
+    # respaldo léxico clasifica TODO comentario que quedó sin tema.
     topic_results_by_text: dict[int, TopicResult] = {}
     tema_por_comment_id: dict[str, str] = {}
+    origen_tema_por_comment_id: dict[str, str] = {}
     if comentarios_con_temas:
         for c in comentarios_con_temas:
             ts = c.get("tema_sugerido")
             if ts:
                 tema_por_comment_id[c["id"]] = ts
-    elif comentarios_texts:
+                origen_tema_por_comment_id[c["id"]] = "humano"
+    if comentarios_texts:
         for i, text in enumerate(comentarios_texts):
             result = classify_topic(text)
             topic_results_by_text[i] = result
+    # Respaldo léxico sobre los que no tienen tema humano (humano gana siempre).
+    if comentarios_con_contexto and topic_results_by_text:
+        posicion_por_id: dict[str, int] = {}
+        j = 0
+        for ctx in comentarios_con_contexto:
+            if ctx.get("texto"):
+                posicion_por_id[ctx.get("id", "")] = j
+                j += 1
+        for ctx in comentarios_con_contexto:
+            cid = ctx.get("id", "")
+            if not cid or cid in tema_por_comment_id:
+                continue
+            i = posicion_por_id.get(cid)
+            if i is None:
+                continue
+            tr = topic_results_by_text.get(i)
+            if tr and tr.tema and tr.tema != "no_aplica":
+                tema_por_comment_id[cid] = tr.tema
+                origen_tema_por_comment_id[cid] = "lexico"
+
+    # Cobertura temática explícita: cuántos comentarios tienen tema y de qué origen.
+    n_comentarios_con_tema = len(tema_por_comment_id)
+    n_comentarios_total_tema = n_total
+    n_comentarios_sin_tema = max(0, n_comentarios_total_tema - n_comentarios_con_tema)
+    pct_cobertura_tematica = (
+        round(n_comentarios_con_tema / n_comentarios_total_tema * 100, 1)
+        if n_comentarios_total_tema > 0 else 0.0
+    )
+    origen_tema_conteo = {
+        "humano": sum(1 for o in origen_tema_por_comment_id.values() if o == "humano"),
+        "lexico": sum(1 for o in origen_tema_por_comment_id.values() if o == "lexico"),
+    }
 
     ramas = []
     for t in aprobaciones_agrupadas:
@@ -259,23 +301,15 @@ def construir_analysis(aprobaciones_agrupadas: list,
     # URLs reales sin volver a tocar las DBs crudas.
     evidencia_por_tema: dict[str, set[str]] = {}
     evidencia_por_emocion: dict[str, set[str]] = {}
-    if tema_por_comment_id and comentarios_con_contexto:
+    if comentarios_con_contexto:
         for ctx in comentarios_con_contexto:
             post_id = ctx.get("post_id", "")
             cid = ctx.get("id", "")
             if not post_id or not cid:
                 continue
             tema = tema_por_comment_id.get(cid)
-            if tema:
+            if tema and tema != "no_aplica":
                 evidencia_por_tema.setdefault(tema, set()).add(post_id)
-    elif comentarios_con_contexto and topic_results_by_text:
-        for i, ctx in enumerate(comentarios_con_contexto):
-            post_id = ctx.get("post_id", "")
-            if not post_id:
-                continue
-            tr = topic_results_by_text.get(i)
-            if tr and tr.tema and tr.tema != "no_aplica":
-                evidencia_por_tema.setdefault(tr.tema, set()).add(post_id)
     # Clasificar emoción de CADA comentario individualmente para evidencia.
     # Independiente de topic_results_by_text: clasificar emoción solo
     # necesita el texto del comentario, no el tema.
@@ -288,6 +322,19 @@ def construir_analysis(aprobaciones_agrupadas: list,
             emo_result = classify_emotion(texto, es_oficial=es_oficial)
             if emo_result.emocion and emo_result.emocion != "calma":
                 evidencia_por_emocion.setdefault(emo_result.emocion, set()).add(post_id)
+
+    # ── meta.enlaces_analizados: URLs reales de los posts efectivamente
+    # analizados (comentario->post_id), sin valores fijos a mano ──
+    if comentarios_con_contexto:
+        try:
+            from analytics.evidence import _resolver_ids_a_urls
+            post_ids_analizados = sorted({
+                ctx.get("post_id", "") for ctx in comentarios_con_contexto
+                if ctx.get("post_id")
+            })
+            meta["enlaces_analizados"] = _resolver_ids_a_urls(post_ids_analizados)
+        except Exception:
+            pass
 
     # ── Mapear tema → zona (necesario para bloque1 y bloque3) ──
     zona_por_tema: dict[str, str] = {}
@@ -532,6 +579,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "n_total_comentarios": n_total,
             "tono_score_hoy": tono_score_hoy,
             "tono_score_ayer": tono_score_ayer,
+            "hay_referencia_anterior": hay_referencia_anterior,
             "tendencia": tendencia,
             "etiqueta_tendencia": etiqueta_tendencia,
             "narrativa": "",
@@ -557,6 +605,11 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "nivel": _clasificar_concentracion(ramas),
             "top_tema": top_tema,
             "n_temas": n_temas,
+            "n_comentarios_con_tema": n_comentarios_con_tema,
+            "n_comentarios_total": n_comentarios_total_tema,
+            "n_comentarios_sin_tema": n_comentarios_sin_tema,
+            "pct_cobertura_tematica": pct_cobertura_tematica,
+            "origen_tema": origen_tema_conteo,
             "narrativa": "",
             "enlaces_referencia": [],
             "formula_usada": "HHI = Σ(share_i²) donde share_i = n_tema_i / total_temas",
@@ -604,7 +657,7 @@ def construir_analysis(aprobaciones_agrupadas: list,
             "enlaces_referencia": [],
         },
         "termometro_lugares": _construir_termometro_lugares(
-            fb_anger_by_zone or [],
+            fb_comments_emotion_by_zone or [],
             zona_por_tema,
         ),
     }
@@ -1106,26 +1159,30 @@ def construir_analysis(aprobaciones_agrupadas: list,
 
 
 def _construir_termometro_lugares(
-    fb_anger_by_zone: list,
+    comentarios_por_zona: list,
     zona_por_tema: dict,
 ) -> list:
     """Construye lista de lugares con nivel de tensión para el termómetro.
 
-    Fórmula nivel_tension:
-        nivel_tension = clamp(pct_negativos * 100, 0, 100)
-        donde pct_negativos = negativos / total si total > 0, else 0.
+    Fórmula nivel_tension (escala 0-100, sin multiplicadores):
+        nivel_tension = pct_negativos
+        donde pct_negativos = negativos / total_comentarios * 100 ya viene
+        en escala 0-100 desde get_fb_comments_emotion_by_zone().
 
     Resultado ordenado por nivel_tension descendente.
     """
+    from dashboard.tema_taxonomia import EMOCIONES
     lugares = []
-    for zona_data in fb_anger_by_zone:
+    for zona_data in comentarios_por_zona:
         zona_nombre = zona_data.get("zona", "")
         if not zona_nombre:
             continue
-        total = zona_data.get("total", 0)
+        total = zona_data.get("n_comentarios", 0)
         negativos = zona_data.get("negativos", 0)
         pct_neg = zona_data.get("pct_negativos", 0)
-        nivel_tension = min(max(round(pct_neg * 100, 1), 0), 100)
+        nivel_tension = min(max(round(pct_neg, 1), 0), 100)
+        emociones = zona_data.get("emociones", {})
+        emocion_dominante = max(emociones, key=lambda k: (emociones[k], k)) if emociones else ""
         tema_dominante = ""
         n_tema_dom = 0
         for tema, zona in zona_por_tema.items():
@@ -1133,17 +1190,22 @@ def _construir_termometro_lugares(
                 tema_dominante = tema
                 n_tema_dom = negativos
                 break
-        lugares.append({
+        item = {
             "lugar": zona_nombre,
             "nivel_tension": nivel_tension,
             "n_comentarios": total,
-            "emocion_dominante": "",
+            "emocion_dominante": emocion_dominante,
             "tema_dominante": tema_dominante,
             "n_tema_dominante": n_tema_dom,
             "citas_ejemplo": [],
             "narrativa": "",
             "enlaces_referencia": [],
-        })
+        }
+        # Desglose pct_* por emoción (escala 0-100).
+        for emo in EMOCIONES:
+            n_emo = emociones.get(emo, 0)
+            item[f"pct_{emo}"] = round(n_emo / total * 100, 1) if total else 0.0
+        lugares.append(item)
     lugares.sort(key=lambda x: x["nivel_tension"], reverse=True)
     return lugares
 

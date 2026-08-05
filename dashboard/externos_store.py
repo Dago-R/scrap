@@ -132,9 +132,51 @@ def obtener_ids_posts_externos(conn):
         return set()
 
 
+def _valor_numero(campo) -> int:
+    """Extrae un número de un campo que puede ser entero plano o el dict
+    {'valor': n, 'confianza': ...} del contrato de extracción."""
+    if campo is None:
+        return 0
+    if isinstance(campo, dict):
+        return int(campo.get("valor") or 0)
+    try:
+        return int(campo or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _total_reacciones(datos: dict) -> int:
+    """Total de reacciones de un post externo.
+
+    Prioridad: flat total_reactions > total del dict reacciones > suma del
+    desglose (likes+loves+cares+hahas+sads+wows+angrys). El contrato de
+    extracción trae las reacciones como {clave: {valor, confianza}}; sin
+    este cálculo el total se guardaba siempre en 0 (17.1.14).
+    """
+    flat = datos.get("total_reactions")
+    if flat is not None and str(flat).strip() != "":
+        return _valor_numero(flat)
+    reacciones = datos.get("reacciones") or {}
+    if not isinstance(reacciones, dict):
+        return 0
+    total = _valor_numero(reacciones.get("total"))
+    if total:
+        return total
+    return sum(
+        _valor_numero(reacciones.get(k))
+        for k in ("likes", "loves", "cares", "hahas", "sads", "wows", "angrys")
+    )
+
+
 def insertar_post_externo(conn, datos, post_id):
     """Inserta un post externo en external_posts."""
     comentarios = datos.get("comentarios") or []
+    enlace = datos.get("enlace") or {}
+    url = datos.get("post_url") or (
+        enlace.get("valor") if isinstance(enlace, dict) else ""
+    )
+    page_name = datos.get("page_name") or datos.get("autor_pagina") or ""
+    comments = datos.get("comments_count")
     conn.execute(
         """INSERT OR REPLACE INTO external_posts
             (post_id, page_name, page_url, message, created_time,
@@ -142,13 +184,13 @@ def insertar_post_externo(conn, datos, post_id):
             VALUES (?,?,?,?,?,?,?,?,?)""",
         (
             post_id,
-            datos.get("page_name", "") or "",
-            datos.get("page_url", "") or "",
-            datos.get("message", "") or "",
+            str(page_name or ""),
+            str(datos.get("page_url", "") or ""),
+            str(datos.get("message", "") or ""),
             datos.get("created_time"),
-            int(datos.get("total_reactions", 0) or 0),
-            int(datos.get("comments_count", 0) or len(comentarios)),
-            datos.get("post_url", "") or "",
+            _total_reacciones(datos),
+            int(comments or len(comentarios)) if comments is not None else len(comentarios),
+            str(url or ""),
             "manual_externo",
         ),
     )
